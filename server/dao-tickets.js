@@ -13,18 +13,41 @@ const convertTicketFromDbRecord = (dbRecord) => {
     return ticket;
   }
 
+  //Removes block.id, is not useful for our goal (in ticket is necessary to obtain blocks list)
+  const convertBlockFromDbRecord = (dbRecord) => {
+    const block = {};
+    block.author = dbRecord.author;
+    block.text = dbRecord.text;
+    block.ticketId = dbRecord.timestamp;
+    block.text = dbRecord.text;
+    return block;
+  }
+
 
 exports.listTickets = () => {
     return new Promise((resolve, reject) => {
       const sql = 'SELECT * FROM tickets';
       db.all(sql, (err, rows) => {
         if (err) { reject(err); }
-  
         const tickets = rows.map((e) => {
           const ticket = convertTicketFromDbRecord(e);
           return ticket;
         });
         resolve(tickets);
+      });
+    });
+  };
+
+  exports.listBlocksByTicket = (id) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'SELECT * FROM blocks WHERE ticket = ?';
+      db.all(sql, [id], (err, rows) => {
+        if (err) { reject(err); }
+        const blocks = rows.map((e) => {
+          const block = convertBlockFromDbRecord(e);
+          return block;
+        });
+        resolve(blocks);
       });
     });
   };
