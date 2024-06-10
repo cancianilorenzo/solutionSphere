@@ -1,5 +1,6 @@
 'use strict';
 
+const dayjs = require('dayjs');
 const db = require('./db');
 
 const convertTicketFromDbRecord = (dbRecord) => {
@@ -48,6 +49,21 @@ exports.listTickets = () => {
           return block;
         });
         resolve(blocks);
+      });
+    });
+  };
+
+  exports.createTicket = (ticket, userId) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'INSERT INTO tickets (owner, state, title, timestamp, text, category) VALUES(?, ?, ?, ?, ?, ?)';
+      ticket.timestamp = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      ticket.state = 'open';
+      ticket.owner = userId;
+      db.run(sql, [ticket.owner, ticket.state, ticket.title, ticket.timestamp, ticket.text, ticket.category], function (err) {
+        if (err) {
+          reject(err);
+        }
+        resolve(this);
       });
     });
   };
