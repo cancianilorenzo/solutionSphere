@@ -106,3 +106,15 @@ exports.listTickets = () => {
       });
     });
   };
+
+  exports.patchTicketCategory = (ticket, category) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'UPDATE tickets SET category = ? WHERE id = ?';
+      db.run(sql, [category, ticket.id], function (err) {
+        if (err) {
+          reject(err);
+        }
+        resolve('Category changed');
+      });
+    });
+  };
