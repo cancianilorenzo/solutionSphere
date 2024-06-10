@@ -67,3 +67,18 @@ exports.listTickets = () => {
       });
     });
   };
+
+  exports.createBlock = (block, ticketId, userId) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)';
+      block.ticket = ticketId;
+      block.author = userId;
+      block.timestamp = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      db.run(sql, [block.ticket, block.author, block.timestamp, block.text], function (err, row) {
+        if (err) {
+          reject(err);
+        }
+        resolve(row);
+      });
+    });
+  };
