@@ -94,3 +94,15 @@ exports.listTickets = () => {
       });
     });
   };
+
+  exports.setTicketOpened = (ticket) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'UPDATE tickets SET state = ? WHERE id = ?';
+      db.run(sql, ['open', ticket.id], function (err) {
+        if (err) {
+          reject(err);
+        }
+        resolve('Ticket updated');
+      });
+    });
+  };
