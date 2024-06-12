@@ -26,6 +26,13 @@ app.get("/api/blocks", (req, res) => {
     .catch((err) => res.status(500).json(err));
 });
 
+app.post("/api/tickets", (req, res) => {
+  ticketDao
+    .createTicket(req.body)
+    .then((response) => res.json(response))
+    .catch((err) => res.status(500).json(err));
+});
+
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });

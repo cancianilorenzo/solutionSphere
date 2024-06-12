@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS "tickets" (
     "state" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "timestamp" INTEGER NOT NULL,
-    "text" TEXT NOT NULL,
     "category" TEXT CHECK(category IN ('inquiry', 'maintenance', 'new feature', 'administrative', 'payment')),
     FOREIGN KEY("owner") REFERENCES "users"("id")
 );

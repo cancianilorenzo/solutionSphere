@@ -42,18 +42,18 @@ async function insertUser(){
 }
 
 async function insertTicket(){
-    const insertTicketQuery = `INSERT INTO tickets (owner, state, title, timestamp, text, category) VALUES (?, ?, ?, ?, ?, ?)`;
+    const insertTicketQuery = `INSERT INTO tickets (owner, state, title, timestamp, category) VALUES (?, ?, ?, ?, ?)`;
 
     const tickets = [
-        { owner: 1, state: 'open', title: 'Inquiry Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), text: 'This is an inquiry ticket', category: 'inquiry' },
-        { owner: 2, state: 'open', title: 'Maintenance Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), text: 'This is a maintenance ticket', category: 'maintenance' },
-        { owner: 3, state: 'open', title: 'New Feature Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), text: 'This is a new feature ticket', category: 'new feature' },
-        { owner: 4, state: 'open', title: 'Administrative Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), text: 'This is an administrative ticket', category: 'administrative' },
-        { owner: 5, state: 'open', title: 'Payment Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), text: 'This is a payment ticket', category: 'payment' }
+        { owner: 1, state: 'open', title: 'Inquiry Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'inquiry' },
+        { owner: 2, state: 'open', title: 'Maintenance Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'maintenance' },
+        { owner: 3, state: 'open', title: 'New Feature Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'new feature' },
+        { owner: 4, state: 'open', title: 'Administrative Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'administrative' },
+        { owner: 5, state: 'open', title: 'Payment Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'payment' }
     ];
 
     tickets.forEach(ticket => {
-        db.run(insertTicketQuery, [ticket.owner, ticket.state, ticket.title, ticket.timestamp, ticket.text, ticket.category], (err) => {
+        db.run(insertTicketQuery, [ticket.owner, ticket.state, ticket.title, ticket.timestamp, ticket.category], (err) => {
             if (err) throw err;
             else {
                 console.log('Ticket inserted successfully');

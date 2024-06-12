@@ -10,7 +10,6 @@ const convertTicketFromDbRecord = (dbRecord) => {
   ticket.state = dbRecord.state;
   ticket.category = dbRecord.category;
   ticket.timestamp = dbRecord.timestamp;
-  ticket.text = dbRecord.text;
   return ticket;
 };
 
@@ -18,9 +17,7 @@ const convertTicketFromDbRecord = (dbRecord) => {
 const convertBlockFromDbRecord = (dbRecord) => {
   const block = {};
   block.author = dbRecord.author;
-  block.text = dbRecord.text;
   block.ticketId = dbRecord.timestamp;
-  block.text = dbRecord.text;
   return block;
 };
 
@@ -56,30 +53,83 @@ exports.listBlocksByTicket = (id) => {
   });
 };
 
-exports.createTicket = (ticket, userId) => {
+exports.createTicket = (ticket) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO tickets (owner, state, title, timestamp, text, category) VALUES(?, ?, ?, ?, ?, ?)";
-    ticket.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
-    ticket.state = "open";
-    ticket.owner = userId;
-    db.run(
-      sql,
-      [
-        ticket.owner,
-        ticket.state,
-        ticket.title,
-        ticket.timestamp,
-        ticket.text,
-        ticket.category,
-      ],
-      function (err) {
+    console.log(ticket);
+    const {owner, title, text, category} = ticket;
+    if( !!owner && !!title && !!text && !!category){
+
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION", (err) => {
         if (err) {
-          reject(err);
+          reject("Failed to start transaction", err.message);
         }
-        resolve(this);
-      }
-    );
+        ticket.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
+        ticket.state = "open";
+
+        const sqlTicket =
+          "INSERT INTO tickets (owner, state, title, timestamp, category) VALUES (?, ?, ?, ?, ?)";
+        db.run(
+          sqlTicket,
+          [
+            ticket.owner,
+            ticket.state,
+            ticket.title,
+            ticket.timestamp,
+            ticket.category
+          ],
+          function (err) {
+            if (err) {
+              console.error("Failed to insert into tickets", err.message);
+              db.run("ROLLBACK", (rollbackErr) => {
+                if (rollbackErr) {
+                  reject("Failed to rollback transaction", rollbackErr.message);
+                }
+              });
+            }
+
+            console.log(`Inserted into tickets with ID: ${this.lastID}`);
+            ticket.id = this.lastID;
+
+            const sqlBlock =
+              "INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)";
+            db.run(
+              sqlBlock,
+              [ticket.id, ticket.author, ticket.timestamp, ticket.text],
+              function (err) {
+                if (err) {
+                  reject("Failed to insert into blocks", err.message);
+                  db.run("ROLLBACK", (rollbackErr) => {
+                    if (rollbackErr) {
+                      reject(
+                        "Failed to rollback transaction",
+                        rollbackErr.message
+                      );
+                    }
+                  });
+                }
+                console.log(`Inserted into blocks with ID: ${this.lastID}`);
+
+                db.run("COMMIT", (commitErr) => {
+                  if (commitErr) {
+                    reject(
+                      "Failed to commit transaction",
+                      commitErr.message
+                    );
+                  } else {
+                    resolve("Transaction committed successfully.");
+                  }
+                });
+              }
+            );
+          }
+        );
+      });
+    });
+    }
+    else{
+      reject("Missing required fields");
+    }
   });
 };
 
