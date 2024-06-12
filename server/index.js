@@ -1,12 +1,31 @@
-'use strict';
+"use strict";
 
-const express = require('express');
+const express = require("express");
+const morgan = require("morgan");
 
-// init express
+const ticketDao = require("./dao-tickets");
 const app = new express();
 const port = 3001;
 
-// activate the server
+app.use(morgan("dev"));
+app.use(express.json());
+app.use(express.urlencoded());
+
+app.get("/api/tickets", (req, res) => {
+  ticketDao
+    .listTickets()
+    .then((tickets) => res.json(tickets))
+    .catch((err) => res.status(500).json(err));
+});
+
+app.get("/api/blocks", (req, res) => {
+  const { id } = req.body;
+  ticketDao
+    .listBlocksByTicket(id)
+    .then((blocks) => res.json(blocks))
+    .catch((err) => res.status(500).json(err));
+});
+
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
