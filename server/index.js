@@ -1,28 +1,65 @@
 "use strict";
 
-/*
-Constrains:
--> Ticket:
-  -owner: int
-  -title: string
-  -category: string PRECISE LIST
--> Block:
-  -id: int NOT NULL
-  -text: string NOT NULL
-
-*/
-
 const express = require("express");
 const morgan = require("morgan");
-const { body, query, validationResult } = require("express-validator"); // validation middleware
 
+//Tickets
+const { body, query, validationResult } = require("express-validator");
 const ticketDao = require("./dao-tickets");
+
+//AuthN
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const userDao = require("./dao-users");
+
+//Server
 const app = new express();
 const port = 3001;
 
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded());
+
+passport.use(
+  new LocalStrategy(async function verify(username, password, callback) {
+    const user = await userDao.getUser(username, password);
+    if (!user) return callback(null, false, "Wrong username or password");
+
+    return callback(null, user);
+  })
+);
+
+passport.serializeUser(function (user, callback) {
+  callback(null, user);
+});
+
+passport.deserializeUser(function (user, callback) {
+  return callback(null, user);
+});
+
+//Session creation
+const session = require("express-session");
+
+app.use(
+  session({
+    secret: "Mamma, anche quest'anno niente vacanze", //TODO
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: app.get("env") === "production" ? true : false,
+    },
+  })
+);
+
+app.use(passport.authenticate("session"));
+
+const isLoggedIn = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ error: "Not authenticated" });
+};
 
 const validCategories = [
   "inquiry",
@@ -48,6 +85,7 @@ app.get(
       .withMessage("Id should not be empty")
       .isInt()
       .withMessage("Id should be an integer"),
+    isLoggedIn,
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -88,6 +126,7 @@ app.post(
       .withMessage("Text should not be empty")
       .isString()
       .withMessage("Text should be a string"),
+    isLoggedIn,
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -95,6 +134,11 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
     const ticket = req.body;
+    ticket.owner = req.user.id;
+    //Check user existance on db
+    if(!userDao.getUserById(ticket.owner)){
+      return res.status(400).json({ error: "User does not exist" });
+    }
     ticketDao
       .createTicket(ticket)
       .then((response) => res.json(response))
@@ -123,6 +167,7 @@ app.post(
       .withMessage("Id should not be empty")
       .isInt()
       .withMessage("Id should be an integer"),
+    isLoggedIn,
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -130,6 +175,15 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
     const block = req.body;
+    block.author = req.user.id;
+    //Check user existance on db
+    if(!userDao.getUserById(block.author)){
+      return res.status(400).json({ error: "User does not exist" });
+    }
+    //check ticket existance on db
+    if(!ticketDao.getTicketById(block.ticketId)){
+      return res.status(400).json({ error: "Ticket does not exist" });
+    }
     ticketDao
       .createBlock(block)
       .then((response) => res.json(response))
@@ -151,14 +205,22 @@ app.put(
       .withMessage(
         `Category must be one of the following: ${validCategories.join(", ")}`
       ),
+    isLoggedIn,
   ],
   (req, res) => {
     //Better to use patch??
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     const ticket = req.body;
+    //check ticket existance on db
+    if(!ticketDao.getTicketById(ticket.id)){
+      return res.status(400).json({ error: "Ticket does not exist" });
+    }
     ticketDao
       .patchTicketCategory(ticket)
       .then((response) => res.json(response))
@@ -175,14 +237,22 @@ app.put(
       .withMessage("Id should not be empty")
       .isInt()
       .withMessage("Id should be an integer"),
+    isLoggedIn,
   ],
   (req, res) => {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
     //Better to use patch??
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     const ticket = req.body;
+    //check ticket existance on db
+    if(!ticketDao.getTicketById(ticket.id)){
+      return res.status(400).json({ error: "Ticket does not exist" });
+    }
     ticketDao
       .setTicketOpened(ticket)
       .then((response) => res.json(response))
@@ -199,20 +269,57 @@ app.put(
       .withMessage("Id should not be empty")
       .isInt()
       .withMessage("Id should be an integer"),
+      isLoggedIn,
   ],
   (req, res) => {
-    //Better to use patch??
+    if(ticket.owner !== req.user.id){
+      return res.status(403).json({ error: "Not authorized" });
+    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
     const ticket = req.body;
+    //check ticket existance on db
+    if(!ticketDao.getTicketById(ticket.id)){
+      return res.status(400).json({ error: "Ticket does not exist" });
+    }
     ticketDao
       .setTicketClosed(ticket)
       .then((response) => res.json(response))
       .catch((err) => res.status(500).json(err));
   }
 );
+
+app.post("/api/sessions", function (req, res, next) {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) {
+      // display wrong login messages
+      return res.status(401).json({ error: info });
+    }
+    // success, perform the login and extablish a login session
+    req.login(user, (err) => {
+      if (err) return next(err);
+
+      // req.user contains the authenticated user, we send all the user info back
+      // this is coming from userDao.getUser() in LocalStratecy Verify Fn
+      return res.json(req.user);
+    });
+  })(req, res, next);
+});
+
+app.get("/api/sessions/current", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.status(200).json(req.user);
+  } else res.status(401).json({ error: "Not authenticated" });
+});
+
+app.delete("/api/sessions/current", (req, res) => {
+  req.logout(() => {
+    res.status(200).json({});
+  });
+});
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
