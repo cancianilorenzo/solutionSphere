@@ -33,3 +33,16 @@ content-type: application/json
 }
 ###
 
+## Login
+POST http://localhost:3001/api/sessions HTTP/1.1
+content-type: application/json
+
+{
+    "username": "admin1",
+    "password": "password1",
+    "credentials": "include"
+}
+###
+
+
+GET http://localhost:3001/api/sessions/current HTTP/1.1

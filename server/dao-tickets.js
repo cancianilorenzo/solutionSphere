@@ -25,6 +25,9 @@ exports.listBlocksByTicket = (id) => {
       if (err) {
         reject(err);
       }
+      if(rows.length === 0){
+        reject("No blocks found for that ticket");
+      }
       const blocks = rows.map((e) => {
         return e;
       });
@@ -34,7 +37,6 @@ exports.listBlocksByTicket = (id) => {
 };
 
 
-//TODO add control for user existance
 exports.createTicket = (ticket) => {
   return new Promise((resolve, reject) => {
     console.log(ticket);
@@ -126,16 +128,6 @@ exports.createBlock = (block) => {
 exports.setTicketClosed = (ticket) => {
   const { id } = ticket;
   return new Promise((resolve, reject) => {
-    //Check if ticket with that id exist
-    const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
-    db.get(sqlCheck, [id], (err, row) => {
-      if (err) {
-        reject(err);
-      }
-      if (!row) {
-        reject("Ticket with that id does not exist");
-      }
-    });
     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
     db.run(sql, ["close", id], function (err) {
       if (err) {
@@ -149,16 +141,6 @@ exports.setTicketClosed = (ticket) => {
 exports.setTicketOpened = (ticket) => {
   const { id } = ticket;
   return new Promise((resolve, reject) => {
-    //Check if ticket with that id exist
-    const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
-    db.get(sqlCheck, [id], (err, row) => {
-      if (err) {
-        reject(err);
-      }
-      if (!row) {
-        reject("Ticket with that id does not exist");
-      }
-    });
     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
     db.run(sql, ["open", id], function (err) {
       if (err) {
@@ -171,16 +153,6 @@ exports.setTicketOpened = (ticket) => {
 
 exports.patchTicketCategory = (ticket) => {
   const { category, id } = ticket;
-  //Check if ticket with that id exist
-  const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
-  db.get(sqlCheck, [id], (err, row) => {
-    if (err) {
-      reject(err);
-    }
-    if (!row) {
-      reject("Ticket with that id does not exist");
-    }
-  });
   return new Promise((resolve, reject) => {
     const sql = "UPDATE tickets SET category = ? WHERE id = ?";
     db.run(sql, [category, id], function (err) {
@@ -188,6 +160,22 @@ exports.patchTicketCategory = (ticket) => {
         reject(err);
       }
       resolve("Category changed");
+    });
+  });
+};
+
+
+exports.getTicketById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM tickets WHERE id = ?";
+    db.get(sql, [id], (err, row) => {
+      if (err) {
+        reject(err);
+      }
+      if (!row) {
+        reject("Ticket with that id does not exist");
+      }
+      resolve(row);
     });
   });
 };
