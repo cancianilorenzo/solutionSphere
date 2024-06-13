@@ -84,8 +84,8 @@ async function insertBlock(){
 
 async function main(){
     await insertUser();
-    await insertBlock();
-    await insertTicket();
+    //await insertBlock();
+    //await insertTicket();
 }
 
 main();
