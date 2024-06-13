@@ -3,27 +3,6 @@
 const dayjs = require("dayjs");
 const db = require("./db");
 
-const convertTicketFromDbRecord = (dbRecord) => {
-  const ticket = {};
-  ticket.id = dbRecord.id;
-  ticket.owner = dbRecord.owner;
-  ticket.state = dbRecord.state;
-  ticket.category = dbRecord.category;
-  ticket.timestamp = dbRecord.timestamp;
-  ticket.text = dbRecord.text;
-  return ticket;
-};
-
-//Removes block.id, is not useful for our goal (in ticket is necessary to obtain blocks list)
-const convertBlockFromDbRecord = (dbRecord) => {
-  const block = {};
-  block.author = dbRecord.author;
-  block.text = dbRecord.text;
-  block.ticketId = dbRecord.timestamp;
-  block.text = dbRecord.text;
-  return block;
-};
-
 exports.listTickets = () => {
   return new Promise((resolve, reject) => {
     const sql = "SELECT * FROM tickets";
@@ -32,8 +11,7 @@ exports.listTickets = () => {
         reject(err);
       }
       const tickets = rows.map((e) => {
-        const ticket = convertTicketFromDbRecord(e);
-        return ticket;
+        return e;
       });
       resolve(tickets);
     });
@@ -48,65 +26,118 @@ exports.listBlocksByTicket = (id) => {
         reject(err);
       }
       const blocks = rows.map((e) => {
-        const block = convertBlockFromDbRecord(e);
-        return block;
+        return e;
       });
       resolve(blocks);
     });
   });
 };
 
-exports.createTicket = (ticket, userId) => {
+
+//TODO add control for user existance
+exports.createTicket = (ticket) => {
   return new Promise((resolve, reject) => {
-    const sql =
-      "INSERT INTO tickets (owner, state, title, timestamp, text, category) VALUES(?, ?, ?, ?, ?, ?)";
-    ticket.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
-    ticket.state = "open";
-    ticket.owner = userId;
-    db.run(
-      sql,
-      [
-        ticket.owner,
-        ticket.state,
-        ticket.title,
-        ticket.timestamp,
-        ticket.text,
-        ticket.category,
-      ],
-      function (err) {
+    console.log(ticket);
+
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION", (err) => {
         if (err) {
-          reject(err);
+          reject("Failed to start transaction", err.message);
         }
-        resolve(this);
-      }
-    );
+        ticket.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
+        ticket.state = "open";
+        const { owner, state, title, timestamp, category } = ticket;
+
+        const sqlTicket =
+          "INSERT INTO tickets (owner, state, title, timestamp, category) VALUES (?, ?, ?, ?, ?)";
+        db.run(
+          sqlTicket,
+          [owner, state, title, timestamp, category],
+          function (err) {
+            if (err) {
+              console.error("Failed to insert into tickets", err.message);
+              db.run("ROLLBACK", (rollbackErr) => {
+                if (rollbackErr) {
+                  reject("Failed to rollback transaction", rollbackErr.message);
+                }
+              });
+            }
+            console.log(`Inserted into tickets with ID: ${this.lastID}`);
+            ticket.id = this.lastID;
+            const { id, owner, timestamp, text } = ticket;
+            const sqlBlock =
+              "INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)";
+            db.run(sqlBlock, [id, owner, timestamp, text], function (err) {
+              if (err) {
+                reject("Failed to insert into blocks", err.message);
+                db.run("ROLLBACK", (rollbackErr) => {
+                  if (rollbackErr) {
+                    reject(
+                      "Failed to rollback transaction",
+                      rollbackErr.message
+                    );
+                  }
+                });
+              }
+              console.log(`Inserted into blocks with ID: ${this.lastID}`);
+
+              db.run("COMMIT", (commitErr) => {
+                if (commitErr) {
+                  reject("Failed to commit transaction", commitErr.message);
+                } else {
+                  resolve("Transaction committed successfully.");
+                }
+              });
+            });
+          }
+        );
+      });
+    });
   });
 };
 
-exports.createBlock = (block, ticketId, userId) => {
+
+//TODO add control for user existance
+exports.createBlock = (block) => {
   return new Promise((resolve, reject) => {
+    block.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
+    const { ticketId, author, timestamp, text } = block;
+    //Check if ticket with that id exist
+    const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
+    db.get(sqlCheck, [ticketId], (err, row) => {
+      if (err) {
+        reject(err);
+      }
+      if (!row) {
+        reject("Ticket with that id does not exist");
+      }
+    });
     const sql =
       "INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)";
-    block.ticket = ticketId;
-    block.author = userId;
-    block.timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
-    db.run(
-      sql,
-      [block.ticket, block.author, block.timestamp, block.text],
-      function (err, row) {
-        if (err) {
-          reject(err);
-        }
-        resolve(row);
+    db.run(sql, [ticketId, author, timestamp, text], function (err, row) {
+      if (err) {
+        reject(err);
       }
-    );
+      resolve(row);
+    });
   });
 };
 
 exports.setTicketClosed = (ticket) => {
+  const { id } = ticket;
   return new Promise((resolve, reject) => {
+    //Check if ticket with that id exist
+    const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
+    db.get(sqlCheck, [id], (err, row) => {
+      if (err) {
+        reject(err);
+      }
+      if (!row) {
+        reject("Ticket with that id does not exist");
+      }
+    });
     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-    db.run(sql, ["close", ticket.id], function (err) {
+    db.run(sql, ["close", id], function (err) {
       if (err) {
         reject(err);
       }
@@ -116,9 +147,20 @@ exports.setTicketClosed = (ticket) => {
 };
 
 exports.setTicketOpened = (ticket) => {
+  const { id } = ticket;
   return new Promise((resolve, reject) => {
+    //Check if ticket with that id exist
+    const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
+    db.get(sqlCheck, [id], (err, row) => {
+      if (err) {
+        reject(err);
+      }
+      if (!row) {
+        reject("Ticket with that id does not exist");
+      }
+    });
     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-    db.run(sql, ["open", ticket.id], function (err) {
+    db.run(sql, ["open", id], function (err) {
       if (err) {
         reject(err);
       }
@@ -127,10 +169,21 @@ exports.setTicketOpened = (ticket) => {
   });
 };
 
-exports.patchTicketCategory = (ticket, category) => {
+exports.patchTicketCategory = (ticket) => {
+  const { category, id } = ticket;
+  //Check if ticket with that id exist
+  const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
+  db.get(sqlCheck, [id], (err, row) => {
+    if (err) {
+      reject(err);
+    }
+    if (!row) {
+      reject("Ticket with that id does not exist");
+    }
+  });
   return new Promise((resolve, reject) => {
     const sql = "UPDATE tickets SET category = ? WHERE id = ?";
-    db.run(sql, [category, ticket.id], function (err) {
+    db.run(sql, [category, id], function (err) {
       if (err) {
         reject(err);
       }

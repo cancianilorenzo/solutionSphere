@@ -1,0 +1,35 @@
+# This file could be used for testing the API with Visual Studio Code
+
+## Retrieve all tickets
+GET http://localhost:3001/api/tickets HTTP/1.1
+###
+
+
+## Retrieve all bllocks associated to a ticket
+GET http://localhost:3001/api/blocks?id=ciao HTTP/1.1
+###
+
+
+## Create new ticket
+POST http://localhost:3001/api/tickets HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Ticket from HTTP request",
+    "text": "This is a ticket",
+    "category": "payment",
+    "owner": 3
+}
+###
+
+## Create new block 
+POST http://localhost:3001/api/blocks HTTP/1.1
+content-type: application/json
+
+{
+    "text": "This is a ticket00",
+    "ticketId": 5,
+    "author": 5
+}
+###
+
