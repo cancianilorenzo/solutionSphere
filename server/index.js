@@ -2,6 +2,7 @@
 
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 
 //Tickets
 const { body, query, validationResult } = require("express-validator");
@@ -15,6 +16,13 @@ const userDao = require("./dao-users");
 //Server
 const app = new express();
 const port = 3001;
+
+//Cors options
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(morgan("dev"));
 app.use(express.json());
