@@ -120,7 +120,7 @@ exports.createBlock = (block) => {
       if (err) {
         reject(err);
       }
-      resolve(row);
+      resolve("Ticket block created successfully");
     });
   });
 };

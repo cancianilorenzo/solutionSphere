@@ -1,71 +1,172 @@
 import { useState } from "react";
 import { Form, Button } from "react-bootstrap";
+import API from "../API";
+import { useNavigate } from "react-router-dom";
+import { useParams } from 'react-router-dom';
 
-function CreateTicket() {
-    const [title, setTitle] = useState("");
-    const [category, setCategory] = useState("");
-    const [text, setText] = useState("");
 
-    const handleTitleChange = (e) => {
-        setTitle(e.target.value);
-    };
+function CreateTicket(props) {
+  const [title, setTitle] = useState(props.title || "");
+  const [category, setCategory] = useState(props.category || "inquiry");
+  const [text, setText] = useState(props.text || "");
+  const [disabled, setDisabled] = useState(false);
+  const [textButton, setTextButton] = useState("Create ticket");
 
-    const handleCategoryChange = (e) => {
-        setCategory(e.target.value);
-    };
+  const navigate = useNavigate();
 
-    const handleTextChange = (e) => {
-        setText(e.target.value);
-    };
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value);
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(title, category, text);
-        // Perform ticket creation logic here
-        // You can access the values of title, category, and text using the state variables
-        // For example, you can send an API request to create a new ticket with the entered values
-    };
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
 
-    return (
-        <>
-            <Form onSubmit={handleSubmit}>
-                <Form.Group controlId="title">
-                    <Form.Label>Title:</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={title}
-                        onChange={handleTitleChange}
-                    />
-                </Form.Group>
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+  };
 
-                <Form.Group controlId="category">
-                    <Form.Label>Category:</Form.Label>
-                    <Form.Control
-                        as="select"
-                        value={category}
-                        onChange={handleCategoryChange}
-                    >
-                        <option value="category1">Category 1</option>
-                        <option value="category2">Category 2</option>
-                        <option value="category3">Category 3</option>
-                    </Form.Control>
-                </Form.Group>
+  const handleSubmitTicket = (e) => {
+    e.preventDefault();
+    // const ticket = { title, category, text };
+    if (title === "" || category === "" || text === "") {
+      props.setErrorMessage("Please fill in all fields");
+      return;
+    }
+    if (!disabled) {
+      setDisabled(true);
+      setTextButton("Confirm");
+      console.log(title, category, text);
+    } else {
+      API.createTicket({ title, category, text }).then((ticket) => {
+        if (ticket) {
+          props.setErrorMessage("");
+          props.setDirty(true);
+          navigate("/");
+        } else {
+          props.setErrorMessage("Failed to create the ticket");
+        }
+      });
+    }
+  };
 
-                <Form.Group controlId="text">
-                    <Form.Label>Text:</Form.Label>
-                    <Form.Control
-                        as="textarea"
-                        value={text}
-                        onChange={handleTextChange}
-                    />
-                </Form.Group>
+  const handleEdit = () => {
+    setDisabled(false);
+    setTextButton("Create ticket");
+    return(<createTicket category={category} title={title} text={text} />)
+  }
 
-                <Button variant="primary" type="submit">
-                    Create Ticket
-                </Button>
-            </Form>
-        </>
-    );
+  return (
+    <>
+      <center>
+        {props.errorMessage && (
+          <h1 className="text-danger">{props.errorMessage}</h1>
+        )}
+        <Form onSubmit={handleSubmitTicket}>
+          <fieldset disabled={disabled}>
+            <Form.Group controlId="title">
+              <Form.Label>Title:</Form.Label>
+              <Form.Control
+                type="text"
+                value={title}
+                onChange={handleTitleChange}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="category">
+              <Form.Label>Category:</Form.Label>
+              <Form.Control
+                as="select"
+                value={category}
+                onChange={handleCategoryChange}
+              >
+                <option value="inquiry">Inquiry</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="new feature">New feature</option>
+                <option value="administrative">Administrative</option>
+                <option value="payment">Payment</option>
+              </Form.Control>
+            </Form.Group>
+
+            <Form.Group controlId="text">
+              <Form.Label>Text:</Form.Label>
+              <Form.Control
+                as="textarea"
+                value={text}
+                onChange={handleTextChange}
+              />
+            </Form.Group>
+            <p></p>
+          </fieldset>
+          <center>
+          {disabled && <Button variant="primary" onClick={handleEdit}>
+              Edit
+            </Button>}
+            <p></p>
+            <Button variant="primary" type="submit">
+              {textButton}
+            </Button>
+          </center>
+        </Form>
+      </center>
+    </>
+  );
 }
 
-export default CreateTicket;
+function AddBlock(props) {
+  const [text, setText] = useState("");
+  const navigate = useNavigate();
+
+  const ticketId = useParams().id;
+
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(text);
+    if (text === "") {
+      props.setErrorMessage("Please fill in all fields");
+      return;
+    }
+    API.createBlock({ text, ticketId }).then((block) => {
+      if (block) {
+        props.setErrorMessage("");
+        props.setDirty(true);
+        navigate("/");
+      } else {
+        props.setErrorMessage("Failed to create the block");
+      }
+    });
+  };
+
+  return (
+    <>
+      <center>
+        {props.errorMessage && (
+          <h1 className="text-danger">{props.errorMessage}</h1>
+        )}
+        <Form onSubmit={handleSubmit}>
+          <Form.Group controlId="text">
+            <Form.Label>Text:</Form.Label>
+            <Form.Control
+              as="textarea"
+              value={text}
+              onChange={handleTextChange}
+            />
+          </Form.Group>
+          <p></p>
+          <center>
+            <Button variant="primary" type="submit">
+              Create Block
+            </Button>
+          </center>
+        </Form>
+      </center>
+    </>
+  );
+}
+
+const exportsObject = { CreateTicket, AddBlock };
+export default exportsObject;

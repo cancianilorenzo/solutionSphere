@@ -2,6 +2,7 @@
 
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 
 //Tickets
 const { body, query, validationResult } = require("express-validator");
@@ -15,6 +16,13 @@ const userDao = require("./dao-users");
 //Server
 const app = new express();
 const port = 3001;
+
+//Cors options
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(morgan("dev"));
 app.use(express.json());
@@ -103,12 +111,6 @@ app.get(
 app.post(
   "/api/tickets",
   [
-    body("owner")
-      .not()
-      .isEmpty()
-      .withMessage("Owner should not be empty")
-      .isInt()
-      .withMessage("Owner should be an integer"),
     body("title")
       .not()
       .isEmpty()
@@ -129,6 +131,8 @@ app.post(
     isLoggedIn,
   ],
   (req, res) => {
+    console.log(req.user);
+    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -149,12 +153,6 @@ app.post(
 app.post(
   "/api/blocks",
   [
-    body("author")
-      .not()
-      .isEmpty()
-      .withMessage("Author should not be empty")
-      .isInt()
-      .withMessage("Author should be an integer"),
     body("text")
       .not()
       .isEmpty()
@@ -170,6 +168,7 @@ app.post(
     isLoggedIn,
   ],
   (req, res) => {
+    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });

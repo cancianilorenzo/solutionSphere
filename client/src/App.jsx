@@ -1,59 +1,13 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useState, useEffect } from "react";
 import "./App.css";
-import MyNavbar from "./components/Navbar.jsx";
-import Ticket from "./components/Ticket.jsx";
-import MyFooter from "./components/Footer.jsx";
+import TicketRoute from "./components/Ticket.jsx";
 import DefaultRoute from "./components/Default.jsx";
 import { BrowserRouter, Routes, Route, Outlet, Link } from "react-router-dom";
-import CreateTicket from "./components/Manager.jsx";
-import { Container, Row, Col } from "react-bootstrap";
-
-const tickets = [
-  {
-    id: 1,
-    owner: 1,
-    state: "open",
-    title: "Inquiry Ticket",
-    timestamp: "2024-06-14 11:06:08",
-    category: "inquiry",
-  },
-  {
-    id: 2,
-    owner: 2,
-    state: "open",
-    title: "Maintenance Ticket",
-    timestamp: "2024-06-14 11:06:08",
-    category: "maintenance",
-  },
-  {
-    id: 3,
-    owner: 3,
-    state: "open",
-    title: "New Feature Ticket",
-    timestamp: "2024-06-14 11:06:08",
-    category: "new feature",
-  },
-  {
-    id: 4,
-    owner: 4,
-    state: "open",
-    title: "Administrative Ticket",
-    timestamp: "2024-06-14 11:06:08",
-    category: "administrative",
-  },
-  {
-    id: 5,
-    owner: 5,
-    state: "open",
-    title: "Payment Ticket",
-    timestamp: "2024-06-14 11:06:08",
-    category: "payment",
-  },
-];
-
+import API from "./API.jsx";
 import LoginContext from "./context/loginContext.js";
+import Layout from "./components/Layout.jsx";
+import LoginForm from "./components/Login.jsx";
+import exportedObject from './components/Manager';
 
 //ROUTES
 // / = initial page
@@ -61,51 +15,58 @@ import LoginContext from "./context/loginContext.js";
 // /edit = edit a ticket
 // /add/:id = show the form to add a block to a ticket identified by :id
 
-function App() {
-  const [user, setUser] = useState(["user", false]);
+
+function App(props) {
+  const [user, setUser] = useState(undefined);
+  const [tickets, setTickets] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [dirty, setDirty] = useState(true);
+
+  const { CreateTicket, AddBlock } = exportedObject;
+
+  useEffect(() => {
+    if(dirty){
+      API.getTickets().then((tickets) => setTickets(tickets));
+      setDirty(false);
+    }
+    
+  }, [dirty]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await API.getInfo();
+        setUser(user);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const loginSuccesful = (user) => {
+    setUser(user);
+  }
+
+  const logout = () => {
+    API.logout().catch((err) => console.error(err));
+    setUser(undefined);
+  }
+
   return (
     <LoginContext.Provider value={{ user, setUser }}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<TicketRoute />} />
-            <Route path="/create" element={<CreateTicket />} />
+          <Route path="/" element={<Layout logout={logout}/>}>
+            <Route index element={<TicketRoute tickets={tickets} />} />
+            <Route path="/create" element={<CreateTicket errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty}/>} />
+            <Route path="/add/:id" element={<AddBlock errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty}/>} />
+            <Route path="/login" element={<LoginForm errorMessage={errorMessage} setErrorMessage={setErrorMessage} loginSuccessful={loginSuccesful}/>} />
             <Route path="/*" element={<DefaultRoute />} />
           </Route>
         </Routes>
       </BrowserRouter>
     </LoginContext.Provider>
-  );
-}
-
-function Layout() {
-  return (
-    <>
-      <Container>
-        <Row className="justify-content-md-center">
-          <Col md={11}>
-            <MyNavbar appName="SolutionSphere" />
-          </Col>
-        </Row>
-        <p></p>
-        <Row className="justify-content-md-center">
-          <Col md={9}>
-            <div className="content">
-                <Outlet />
-            </div>
-          </Col>
-        </Row>
-      </Container>
-      <p></p>
-      <MyFooter appName="SolutionSphere" className="footer" />
-    </>
-  );
-}
-function TicketRoute(props) {
-  return (
-    <>
-      <Ticket listOfTickets={tickets} />
-    </>
   );
 }
 

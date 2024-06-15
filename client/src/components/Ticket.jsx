@@ -2,52 +2,29 @@ import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
 
 import LoginContext from "../context/loginContext";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
+import API from "../API";
+import { Link } from "react-router-dom";
 
-const listOfBlocks = [
-  {
-    id: 1,
-    ticket: 1,
-    author: 1,
-    timestamp: "2024-06-14 11:06:08",
-    text: "This is block 1",
-  },
-  {
-    id: 4,
-    ticket: 1,
-    author: 2,
-    timestamp: "2024-06-14 11:06:08",
-    text: "This is block 2",
-  },
-  {
-    id: 3,
-    ticket: 2,
-    author: 4,
-    timestamp: "2024-06-14 11:06:08",
-    text: "This is block 4",
-  },
-  {
-    id: 5,
-    ticket: 2,
-    author: 3,
-    timestamp: "2024-06-14 11:06:08",
-    text: "This is block 3",
-  },
-  {
-    id: 2,
-    ticket: 3,
-    author: 5,
-    timestamp: "2024-06-14 11:06:08",
-    text: "This is block 5",
-  },
-];
-
-function TicketWrapper(props) {
+function TicketRoute(props) {
+  const { user, setUser } = useContext(LoginContext);
   return (
     <>
-      {props.listOfTickets.map((e, index) => (
-        <Ticket key={index} ticket={e} />
-      ))}
+      <center>
+        {user && (
+          <Link to="/create">
+            <Button variant="success" size="lg">
+              Add Ticket
+            </Button>
+          </Link>
+        )}
+      </center>
+      <p></p>
+      <Accordion alwaysOpen>
+        {props.tickets.map((e, index) => (
+          <Ticket key={index} ticket={e} />
+        ))}
+      </Accordion>
     </>
   );
 }
@@ -67,35 +44,39 @@ function Block(props) {
 function Ticket(props) {
   const { user, setUser } = useContext(LoginContext);
   const e = props.ticket;
+  const [blocks, setBlocks] = useState([]);
+  useEffect(() => {
+    if (user) {
+      API.getBlocks(e.id).then((blocks) => setBlocks(blocks));
+    }
+  }, []);
   return (
     <>
-      <Accordion alwaysOpen onClick={() => console.log("Clicked ", e.id)}>
-        <Accordion.Item eventKey={e.id}>
-          <Accordion.Header>
-            <p>
-              {e.title} - {e.owner} - {e.state} - {e.timestamp}
-            </p>
-          </Accordion.Header>
-          {user[1] ? (
-            listOfBlocks.map(
-              (e, index) =>
-                e.ticket === props.ticket.id && <Block key={index} block={e} />
-            )
-          ) : (
-            <Accordion.Body>
-              <p>Please log in to see responses</p>
-            </Accordion.Body>
-          )}
-          {user[1] && (
-            <Accordion.Body>
-              <Button variant="secondary">Add response</Button>{" "}
-              {user[1] && user[0] === "admin" && <Button>Edit</Button>}
-            </Accordion.Body>
-          )}
-        </Accordion.Item>
-      </Accordion>
+      <Accordion.Item eventKey={e.id}>
+        <Accordion.Header>
+          <p>
+            {e.title} - {e.owner} - {e.state} - {e.timestamp} - {e.id} -{e.category}
+          </p>
+        </Accordion.Header>
+        {user ? (
+          blocks.map((block, index) => <Block key={index} block={block} />)
+        ) : (
+          <Accordion.Body>
+            <p>Please <Link to="/login">log in</Link> to see responses</p>
+          </Accordion.Body>
+        )}
+        {user && (
+          <Accordion.Body>
+            <Link to={`/add/${e.id}`}>
+              <Button variant="secondary" >Add response</Button>
+            </Link>
+            {" "}
+            {user && user.role === "admin" && <Button>Edit</Button>}
+          </Accordion.Body>
+        )}
+      </Accordion.Item>
     </>
   );
 }
 
-export default TicketWrapper;
+export default TicketRoute;
