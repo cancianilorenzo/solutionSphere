@@ -4,25 +4,6 @@ const SERVER_URL = "http://localhost:3001/api/";
 
 import dayjs from "dayjs";
 
-function fetchJson(httpPromise) {
-  return new Promise((resolve, reject) => {
-    httpPromise
-      .then((res) => {
-        if (res.ok) {
-          res.json()
-            .then((data) => resolve(data))
-            .catch((error) => reject({ error: "Unable to parse server response" }));
-        } else {
-          res.json()
-            .then((errData) => reject(errData))
-            .catch((error) => reject({ error: "Unable to parse server response" }));
-        }
-      })
-      .catch((error) => reject({ error: "Failed to communicate with server" }));
-  });
-}
-
-
 function getTickets(id) {
   return fetch(SERVER_URL + "tickets")
     .then(response => {
@@ -32,7 +13,6 @@ function getTickets(id) {
       return response.json();
     })
     .then(tickets => {
-      //sort ticket from last to first
       tickets.sort((a, b) => {
         return new dayjs(b.timestamp) - new dayjs(a.timestamp);
       });
@@ -44,8 +24,8 @@ function getTickets(id) {
     });
 }
 
-function getBlocks(id) {
-  return fetch(SERVER_URL + "blocks?id=" + id, {
+function getBlocks() {
+  return fetch(SERVER_URL + "blocks", {
     method: "GET",
     credentials: "include",
   })
@@ -64,7 +44,7 @@ function getBlocks(id) {
     });
 }
 
-//Function to create a ticket, receives a ticket object with title, owner, category and text
+
 function createTicket(ticket) {
   return fetch(SERVER_URL + "tickets", {
     method: "POST",
@@ -93,7 +73,6 @@ function createTicket(ticket) {
     });
 }
 
-//function to create a block given the ticket id
 function createBlock(block) {
   return fetch(SERVER_URL + "blocks", {
     method: "POST",
@@ -117,6 +96,33 @@ function createBlock(block) {
     })
     .catch((error) => {
       console.error("Failed to create block", error);
+      return null;
+    });
+}
+
+function patchTicket(ticket) {
+  return fetch(SERVER_URL + "ticket", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ticket),
+    credentials: "include",
+  })
+    .then((res) => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        return res.json().then((err) => {
+          throw err;
+        });
+      }
+    })
+    .then((ticket) => {
+      return ticket;
+    })
+    .catch((error) => {
+      console.error("Failed to patch ticket", error);
       return null;
     });
 }
@@ -196,5 +202,5 @@ function getInfo() {
 }
 
 
-const API = { getTickets, getBlocks, login, logout, createTicket, createBlock, getInfo };
+const API = { getTickets, getBlocks, login, logout, createTicket, createBlock, getInfo, patchTicket };
 export default API;

@@ -58,9 +58,9 @@ function App(props) {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout logout={logout}/>}>
-            <Route index element={<TicketRoute tickets={tickets} />} />
+            <Route index element={<TicketRoute tickets={tickets} dirty={dirty} setDirty={setDirty} />} />
             <Route path="/create" element={<CreateTicket errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty}/>} />
-            <Route path="/add/:id" element={<AddBlock errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty}/>} />
+            <Route path="/add/:id" element={<AddBlock errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty} show={true}/>} />
             <Route path="/login" element={<LoginForm errorMessage={errorMessage} setErrorMessage={setErrorMessage} loginSuccessful={loginSuccesful}/>} />
             <Route path="/*" element={<DefaultRoute />} />
           </Route>

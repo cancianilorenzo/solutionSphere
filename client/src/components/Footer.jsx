@@ -4,7 +4,7 @@ import "../App.css";
 function MyFooter(props) {
   return (
     <center>
-      <footer className="footer">
+      <footer>
         <p>&copy; {props.appName}</p>
       </footer>
     </center>

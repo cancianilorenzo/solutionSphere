@@ -1,13 +1,24 @@
 import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
-
 import LoginContext from "../context/loginContext";
 import { useContext, useState, useEffect } from "react";
 import API from "../API";
 import { Link } from "react-router-dom";
+import MANAGER from "./Manager";
+import Badge from "react-bootstrap/Badge";
+import { Container, Row, Col } from "react-bootstrap";
+
+const { EditBlockModal } = MANAGER;
 
 function TicketRoute(props) {
   const { user, setUser } = useContext(LoginContext);
+  const [blocks, setBlocks] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      API.getBlocks().then((blocks) => setBlocks(blocks));
+    }
+  }, [user]);
   return (
     <>
       <center>
@@ -20,9 +31,15 @@ function TicketRoute(props) {
         )}
       </center>
       <p></p>
-      <Accordion alwaysOpen>
+      <Accordion alwaysOpen >
         {props.tickets.map((e, index) => (
-          <Ticket key={index} ticket={e} />
+          <Ticket
+            key={index}
+            ticket={e}
+            blocks={blocks}
+            dirty={props.dirty}
+            setDirty={props.setDirty}
+          />
         ))}
       </Accordion>
     </>
@@ -33,10 +50,19 @@ function Block(props) {
   const e = props.block;
   return (
     <Accordion.Body>
-      <p>{e.author}</p>
-      <p>{e.text}</p>
-      <p>{e.timestamp}</p>
-      <p>{e.ticket}</p>
+      <Container style={{ border: '1px solid black', padding: '10px', backgroundColor: '#f8f9fa' }}>
+        <Row>
+          <Col xs={12} md={6}>
+            Author: {e.author_username}
+          </Col>
+          <Col xs={12} md={6}>
+          Date: {e.timestamp}
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12}>{e.text}</Col>
+        </Row>
+      </Container>
     </Accordion.Body>
   );
 }
@@ -44,34 +70,73 @@ function Block(props) {
 function Ticket(props) {
   const { user, setUser } = useContext(LoginContext);
   const e = props.ticket;
-  const [blocks, setBlocks] = useState([]);
-  useEffect(() => {
-    if (user) {
-      API.getBlocks(e.id).then((blocks) => setBlocks(blocks));
-    }
-  }, []);
+  const { blocks } = props;
+
   return (
     <>
       <Accordion.Item eventKey={e.id}>
         <Accordion.Header>
-          <p>
-            {e.title} - {e.owner} - {e.state} - {e.timestamp} - {e.id} -{e.category}
-          </p>
+          <Container>
+            <Row>
+              <Col xs={12} md={2}>
+                {e.title}
+              </Col>
+              <Col xs={12} md={2}>
+                <Badge bg="info"> {e.category} </Badge>
+              </Col>
+              <Col xs={12} md={2}>
+                {e.owner_username}
+              </Col>
+              <Col xs={12} md={2}>
+                {e.timestamp}
+              </Col>
+              <Col xs={12} md={1}>
+                {e.state === "open" ? (
+                  <Badge bg="success"> Open </Badge>
+                ) : (
+                  <Badge bg="danger">Closed</Badge>
+                )}
+              </Col>
+            </Row>
+          </Container>
         </Accordion.Header>
         {user ? (
-          blocks.map((block, index) => <Block key={index} block={block} />)
+          blocks
+            .filter((block) => block.ticket === e.id)
+            .map((block, index) => <Block key={index} block={block} />)
         ) : (
           <Accordion.Body>
-            <p>Please <Link to="/login">log in</Link> to see responses</p>
+            <p>
+              Please <Link to="/login">log in</Link> to see responses
+            </p>
           </Accordion.Body>
         )}
         {user && (
           <Accordion.Body>
-            <Link to={`/add/${e.id}`}>
-              <Button variant="secondary" >Add response</Button>
-            </Link>
-            {" "}
-            {user && user.role === "admin" && <Button>Edit</Button>}
+            {e.state !== "closed" && (
+              <Link to={`/add/${e.id}`}>
+                <Button variant="success">Add response</Button>
+              </Link>
+            )}{" "}
+            {user && user.role === "admin" && (
+              <EditBlockModal
+                action={"Edit ticket"}
+                ticket={e}
+                dirty={props.dirty}
+                setDirty={props.setDirty}
+              ></EditBlockModal>
+            )}
+            {user &&
+              user.role !== "admin" &&
+              e.state !== "closed" &&
+              user.id === e.owner && (
+                <EditBlockModal
+                  action={"Close ticket"}
+                  ticket={e}
+                  dirty={props.dirty}
+                  setDirty={props.setDirty}
+                ></EditBlockModal>
+              )}
           </Accordion.Body>
         )}
       </Accordion.Item>

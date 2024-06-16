@@ -5,7 +5,12 @@ const db = require("./db");
 
 exports.listTickets = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM tickets";
+
+    const sql = `
+    SELECT tickets.*, users.username AS owner_username 
+    FROM tickets 
+    INNER JOIN users ON tickets.owner = users.id
+  `;
     db.all(sql, (err, rows) => {
       if (err) {
         reject(err);
@@ -18,15 +23,49 @@ exports.listTickets = () => {
   });
 };
 
-exports.listBlocksByTicket = (id) => {
+// exports.listTickets = () => {
+//   return new Promise((resolve, reject) => {
+//     const sql = "SELECT * FROM tickets JOIN users ON tickets.owner = users.id";
+//     db.all(sql, (err, rows) => {
+//       if (err) {
+//         reject(err);
+//       }
+//       const tickets = rows.map((e) => {
+//         return e;
+//       });
+//       resolve(tickets);
+//     });
+//   });
+// };
+
+// exports.listBlocksByTicket = (id) => {
+//   return new Promise((resolve, reject) => {
+//     const sql = "SELECT * FROM blocks WHERE ticket = ?";
+//     db.all(sql, [id], (err, rows) => {
+//       if (err) {
+//         reject(err);
+//       }
+//       if(rows.length === 0){
+//         reject("No blocks found for that ticket");
+//       }
+//       const blocks = rows.map((e) => {
+//         return e;
+//       });
+//       resolve(blocks);
+//     });
+//   });
+// };
+
+exports.listBlocks = () => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM blocks WHERE ticket = ?";
-    db.all(sql, [id], (err, rows) => {
+    const sql = `
+    SELECT blocks.*, users.username AS author_username 
+    FROM blocks 
+    INNER JOIN users ON blocks.author = users.id
+  `;
+    db.all(sql, (err, rows) => {
       if (err) {
         reject(err);
-      }
-      if(rows.length === 0){
-        reject("No blocks found for that ticket");
       }
       const blocks = rows.map((e) => {
         return e;
@@ -36,11 +75,8 @@ exports.listBlocksByTicket = (id) => {
   });
 };
 
-
 exports.createTicket = (ticket) => {
   return new Promise((resolve, reject) => {
-    console.log(ticket);
-
     db.serialize(() => {
       db.run("BEGIN TRANSACTION", (err) => {
         if (err) {
@@ -64,7 +100,6 @@ exports.createTicket = (ticket) => {
                 }
               });
             }
-            console.log(`Inserted into tickets with ID: ${this.lastID}`);
             ticket.id = this.lastID;
             const { id, owner, timestamp, text } = ticket;
             const sqlBlock =
@@ -81,7 +116,6 @@ exports.createTicket = (ticket) => {
                   }
                 });
               }
-              console.log(`Inserted into blocks with ID: ${this.lastID}`);
 
               db.run("COMMIT", (commitErr) => {
                 if (commitErr) {
@@ -97,7 +131,6 @@ exports.createTicket = (ticket) => {
     });
   });
 };
-
 
 //TODO add control for user existance
 exports.createBlock = (block) => {
@@ -176,7 +209,6 @@ exports.patchTicket = async (ticket) => {
     });
   });
 };
-
 
 exports.getTicketById = (id) => {
   return new Promise((resolve, reject) => {

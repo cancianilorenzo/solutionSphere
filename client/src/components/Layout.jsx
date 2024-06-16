@@ -9,7 +9,7 @@ function Layout(props) {
     <>
       <Container>
         <Row className="justify-content-md-center">
-          <Col md={11}>
+          <Col md={14}>
             <MyNavbar appName="SolutionSphere" logout={props.logout} />
           </Col>
         </Row>
