@@ -125,41 +125,54 @@ exports.createBlock = (block) => {
   });
 };
 
-exports.setTicketClosed = (ticket) => {
-  const { id } = ticket;
+// exports.setTicketClosed = (ticket) => {
+//   const { id } = ticket;
+//   return new Promise((resolve, reject) => {
+//     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
+//     db.run(sql, ["close", id], function (err) {
+//       if (err) {
+//         reject(err);
+//       }
+//       resolve("Ticket updated");
+//     });
+//   });
+// };
+
+// exports.setTicketOpened = (ticket) => {
+//   const { id } = ticket;
+//   return new Promise((resolve, reject) => {
+//     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
+//     db.run(sql, ["open", id], function (err) {
+//       if (err) {
+//         reject(err);
+//       }
+//       resolve("Ticket updated");
+//     });
+//   });
+// };
+
+// exports.patchTicketCategory = (ticket) => {
+//   const { category, id } = ticket;
+//   return new Promise((resolve, reject) => {
+//     const sql = "UPDATE tickets SET category = ? WHERE id = ?";
+//     db.run(sql, [category, id], function (err) {
+//       if (err) {
+//         reject(err);
+//       }
+//       resolve("Category changed");
+//     });
+//   });
+// };
+
+//edit ticket
+exports.patchTicket = async (ticket) => {
   return new Promise((resolve, reject) => {
-    const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-    db.run(sql, ["close", id], function (err) {
+    const sql = "UPDATE tickets SET category = ?, state = ? WHERE id = ?";
+    db.run(sql, [ticket.category, ticket.state, ticket.id], function (err) {
       if (err) {
         reject(err);
       }
       resolve("Ticket updated");
-    });
-  });
-};
-
-exports.setTicketOpened = (ticket) => {
-  const { id } = ticket;
-  return new Promise((resolve, reject) => {
-    const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-    db.run(sql, ["open", id], function (err) {
-      if (err) {
-        reject(err);
-      }
-      resolve("Ticket updated");
-    });
-  });
-};
-
-exports.patchTicketCategory = (ticket) => {
-  const { category, id } = ticket;
-  return new Promise((resolve, reject) => {
-    const sql = "UPDATE tickets SET category = ? WHERE id = ?";
-    db.run(sql, [category, id], function (err) {
-      if (err) {
-        reject(err);
-      }
-      resolve("Category changed");
     });
   });
 };
