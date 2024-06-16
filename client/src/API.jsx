@@ -74,12 +74,16 @@ function createTicket(ticket) {
 }
 
 function createBlock(block) {
+  const data = {
+    ticketId: block.id,
+    text: block.text
+  };
   return fetch(SERVER_URL + "blocks", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(block),
+    body: JSON.stringify(data),
     credentials: "include",
   })
     .then((res) => {

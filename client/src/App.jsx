@@ -68,7 +68,6 @@ function App(props) {
           <Route path="/" element={<Layout logout={logout}/>}>
             <Route index element={<TicketRoute tickets={tickets} setDirty={setDirty} blocks={blocks} errorMessage={errorMessage} setErrorMessage={setErrorMessage}/>} />
             {user && <Route path="/create" element={<CreateTicket errorMessage={errorMessage} setErrorMessage={setErrorMessage} setDirty={setDirty}/>} />}
-            {user && <Route path="/add/:id" element={<AddBlock errorMessage={errorMessage} setErrorMessage={setErrorMessage} setDirty={setDirty} show={true}/>} />}
             <Route path="/login" element={<LoginForm errorMessage={errorMessage} setErrorMessage={setErrorMessage} loginSuccessful={loginSuccesful} setDirty={setDirty}/>} />
             <Route path="/*" element={<DefaultRoute />} />
           </Route>

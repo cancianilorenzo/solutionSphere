@@ -58,9 +58,7 @@ function CreateTicket(props) {
   return (
     <>
       <center>
-        {error && (
-          <h1 className="text-danger">{props.errorMessage}</h1>
-        )}
+        {error && <h1 className="text-danger">{props.errorMessage}</h1>}
         <Form onSubmit={handleSubmitTicket}>
           <fieldset disabled={disabled}>
             <Form.Group controlId="title">
@@ -114,85 +112,15 @@ function CreateTicket(props) {
   );
 }
 
-
-
-function AddBlock(props) {
-  const [text, setText] = useState("");
-  const navigate = useNavigate();
-
-  const ticketId = useParams().id;
-  const error = props.errorMessage;
-
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-  };
-
-  const [show, setShow] = useState(props.show);
-
-  const handleClose = () => {
-    setShow(false)
-    navigate("/");
-  }; 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (text === "") {
-      props.setErrorMessage("Please fill in all fields");
-      return;
-    }
-    API.createBlock({ text, ticketId }).then((block) => {
-      if (block) {
-        props.setErrorMessage("");
-        props.setDirty(true);
-        navigate("/");
-      } else {
-        props.setErrorMessage("Failed to add response");
-      }
-    });
-  };
-
-  return (
-    <>
-      <center>
-        <Modal show={show} onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>
-            {error && <h1 className="text-danger">{props.errorMessage}</h1>}
-              Add to ticket #{ticketId}
-              </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="text">
-                <Form.Label>Response:</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  value={text}
-                  onChange={handleTextChange}
-                />
-              </Form.Group>
-              <p></p>
-              </Form>
-          </Modal.Body>
-          <Modal.Footer>
-          <Button variant="primary" onClick={handleSubmit} >
-                Create response
-              </Button>
-              <Button variant="secondary" onClick={handleClose} >
-                Close
-              </Button>
-          </Modal.Footer>
-        </Modal>
-      </center>
-    </>
-  );
-}
-
-function EditBlockModal(props) {
+function EditModal(props) {
   const { ticket } = props;
+  const { block } = props;
+  const id = block ? block : ticket.id;
   const { action } = props;
-  const [category, setCategory] = useState(ticket.category);
+  const [category, setCategory] = useState(ticket ? ticket.category : "");
   const [checked, setChecked] = useState(true);
   const [error, setError] = useState("");
+  const [text, setText] = useState("");
 
   const handleCategoryChange = (e) => {
     setCategory(e.target.value);
@@ -200,29 +128,50 @@ function EditBlockModal(props) {
   const handleChange = () => {
     setChecked(!checked);
   };
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+  };
 
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
   const handleSubmit = () => {
-    let state = "closed";
-    checked ? (state = "closed") : (state = "open");
-    const id = ticket.id;
-    API.patchTicket({ id, category, state }).then((result) => {
-      if (result) {
-        setError("");
-        props.setDirty(true);
-        handleClose();
-      } else {
-        setError("Error in patching ticket");
+    if (ticket) {
+      let state = "closed";
+      checked ? (state = "closed") : (state = "open");
+      const id = ticket.id;
+      API.patchTicket({ id, category, state }).then((result) => {
+        if (result) {
+          setError("");
+          props.setDirty(true);
+          handleClose();
+        } else {
+          setError("Error in patching ticket");
+        }
+      });
+    }
+    if (block) {
+      if (text === "") {
+        props.setErrorMessage("Please fill in all fields");
+        return;
       }
-    });
+      API.createBlock({ text, id }).then((block) => {
+        if (block) {
+          setError("");
+          props.setDirty(true);
+          handleClose();
+        } else {
+          setError("Error in patching ticket");
+        }
+      });
+    }
   };
 
   return (
     <>
-      <Button variant="warning" onClick={handleShow}>
+      <Button variant={props.color || "warning"} onClick={handleShow}>
         {action}
       </Button>
 
@@ -230,14 +179,19 @@ function EditBlockModal(props) {
         <Modal.Header closeButton>
           <Modal.Title>
             {error && <h1 className="text-danger">{error}</h1>}
-            Edit ticket #{ticket.id}
+            {ticket && "Edit ticket"}
+            {block && "Add response"}
           </Modal.Title>
         </Modal.Header>
         {action === "Close ticket" && (
           <Modal.Body>Click Save Changes to close ticket</Modal.Body>
         )}
-        {action === "Edit ticket" && (
-          <Modal.Body>
+        {block && (
+          <Modal.Body>Click Add Response to sumbit response</Modal.Body>
+        )}
+
+        <Modal.Body>
+          {action === "Edit ticket" && (
             <Form>
               <Form.Group controlId="category">
                 <Form.Label>Category:</Form.Label>
@@ -263,14 +217,26 @@ function EditBlockModal(props) {
                 onChange={handleChange}
               />
             </Form>
-          </Modal.Body>
-        )}
+          )}
+          {block && (
+            <Form>
+              <Form.Group controlId="text">
+                <Form.Label>Response:</Form.Label>
+                <Form.Control as="textarea"
+                value={text}
+                onChange={handleTextChange} />
+              </Form.Group>
+              <p></p>
+            </Form>
+          )}
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Back
           </Button>
           <Button variant="primary" onClick={handleSubmit}>
-            Save Changes
+            {ticket && `Save Changes`}
+            {block && `Add Response`}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -278,5 +244,5 @@ function EditBlockModal(props) {
   );
 }
 
-const MANAGER = { CreateTicket, AddBlock, EditBlockModal };
+const MANAGER = { CreateTicket, EditModal };
 export default MANAGER;

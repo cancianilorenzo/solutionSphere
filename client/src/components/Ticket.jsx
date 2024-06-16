@@ -7,7 +7,7 @@ import MANAGER from "./Manager";
 import Badge from "react-bootstrap/Badge";
 import { Container, Row, Col } from "react-bootstrap";
 
-const { EditBlockModal } = MANAGER;
+const { EditModal } = MANAGER;
 
 function TicketRoute(props) {
   const blocks = props.blocks;
@@ -95,25 +95,32 @@ function Ticket(props) {
         {user && (
           <Accordion.Body>
             {ticketOpen && (
-              <Link to={`/add/${e.id}`}>
-                <Button variant="success">Add response</Button>
-              </Link>
+              // <Link to={`/add/${e.id}`}>
+              //   <Button variant="success">Add response</Button>
+              // </Link>
+              <EditModal
+              action={"Add response"}
+              block={e.id}
+              color={"success"}
+              dirty={props.dirty}
+              setDirty={props.setDirty}
+            ></EditModal>
             )}{" "}
             {loggedAdmin && (
-              <EditBlockModal
+              <EditModal
                 action={"Edit ticket"}
                 ticket={e}
                 dirty={props.dirty}
                 setDirty={props.setDirty}
-              ></EditBlockModal>
+              ></EditModal>
             )}
             {loggedTicketOwner && (
-              <EditBlockModal
+              <EditModal
                 action={"Close ticket"}
                 ticket={e}
                 dirty={props.dirty}
                 setDirty={props.setDirty}
-              ></EditBlockModal>
+              ></EditModal>
             )}
           </Accordion.Body>
         )}
