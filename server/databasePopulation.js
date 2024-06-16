@@ -48,8 +48,8 @@ async function insertTicket(){
         { owner: 1, state: 'open', title: 'Inquiry Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'inquiry' },
         { owner: 2, state: 'open', title: 'Maintenance Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'maintenance' },
         { owner: 3, state: 'open', title: 'New Feature Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'new feature' },
-        { owner: 4, state: 'open', title: 'Administrative Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'administrative' },
-        { owner: 5, state: 'open', title: 'Payment Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'payment' }
+        // { owner: 4, state: 'open', title: 'Administrative Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'administrative' },
+        // { owner: 5, state: 'open', title: 'Payment Ticket', timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'), category: 'payment' }
     ];
 
     tickets.forEach(ticket => {
@@ -84,8 +84,8 @@ async function insertBlock(){
 
 async function main(){
     await insertUser();
-    //await insertBlock();
-    //await insertTicket();
+    // await insertBlock();
+    // await insertTicket();
 }
 
 main();

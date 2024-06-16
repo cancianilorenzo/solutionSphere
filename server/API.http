@@ -11,14 +11,15 @@ GET http://localhost:3001/api/blocks?id=ciao HTTP/1.1
 
 
 ## Create new ticket
-POST http://localhost:3001/api/tickets HTTP/1.1
+PATCH http://localhost:3001/api/ticket HTTP/1.1
 content-type: application/json
 
 {
     "title": "Ticket from HTTP request",
     "text": "This is a ticket",
-    "category": "payment",
-    "owner": 3
+    "state": "closed",
+    "owner": 3,
+    "id": 1
 }
 ###
 
@@ -38,11 +39,26 @@ POST http://localhost:3001/api/sessions HTTP/1.1
 content-type: application/json
 
 {
-    "username": "admin1",
-    "password": "password1",
+    "username": "user3",
+    "password": "password3",
     "credentials": "include"
 }
 ###
 
 
 GET http://localhost:3001/api/sessions/current HTTP/1.1
+
+
+
+## Patch ticket
+POST http://localhost:3001/api/tickets HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Ticket from HTTP request",
+    "text": "This is a ticket",
+    "category": "payment",
+    "state": "closed",
+    "owner": 3
+}
+###

@@ -1,35 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./App.css";
+import TicketRoute from "./components/Ticket.jsx";
+import DefaultRoute from "./components/Default.jsx";
+import { BrowserRouter, Routes, Route, Outlet, Link } from "react-router-dom";
+import API from "./API.jsx";
+import LoginContext from "./context/loginContext.js";
+import Layout from "./components/Layout.jsx";
+import LoginForm from "./components/Login.jsx";
+import exportedObject from './components/Manager';
 
-function App() {
-  const [count, setCount] = useState(0)
+//ROUTES
+// / = initial page
+// /create = create a ticket
+// /edit = edit a ticket
+// /add/:id = show the form to add a block to a ticket identified by :id
+
+
+function App(props) {
+  const [user, setUser] = useState(undefined);
+  const [tickets, setTickets] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [dirty, setDirty] = useState(true);
+
+  const { CreateTicket, AddBlock } = exportedObject;
+
+  useEffect(() => {
+    if(dirty){
+      API.getTickets().then((tickets) => setTickets(tickets));
+      setDirty(false);
+    }
+    
+  }, [dirty]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await API.getInfo();
+        setUser(user);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const loginSuccesful = (user) => {
+    setUser(user);
+  }
+
+  const logout = () => {
+    API.logout().catch((err) => console.error(err));
+    setUser(undefined);
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <LoginContext.Provider value={{ user, setUser }}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout logout={logout}/>}>
+            <Route index element={<TicketRoute tickets={tickets} dirty={dirty} setDirty={setDirty} />} />
+            <Route path="/create" element={<CreateTicket errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty}/>} />
+            <Route path="/add/:id" element={<AddBlock errorMessage={errorMessage} setErrorMessage={setErrorMessage} dirty={dirty} setDirty={setDirty} show={true}/>} />
+            <Route path="/login" element={<LoginForm errorMessage={errorMessage} setErrorMessage={setErrorMessage} loginSuccessful={loginSuccesful}/>} />
+            <Route path="/*" element={<DefaultRoute />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </LoginContext.Provider>
+  );
 }
 
-export default App
+export default App;
