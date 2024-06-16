@@ -11,6 +11,7 @@ function CreateTicket(props) {
   const [text, setText] = useState(props.text || "");
   const [disabled, setDisabled] = useState(false);
   const [textButton, setTextButton] = useState("Create ticket");
+  const error = props.errorMessage;
 
   const navigate = useNavigate();
 
@@ -57,7 +58,7 @@ function CreateTicket(props) {
   return (
     <>
       <center>
-        {props.errorMessage && (
+        {error && (
           <h1 className="text-danger">{props.errorMessage}</h1>
         )}
         <Form onSubmit={handleSubmitTicket}>
@@ -113,11 +114,14 @@ function CreateTicket(props) {
   );
 }
 
+
+
 function AddBlock(props) {
   const [text, setText] = useState("");
   const navigate = useNavigate();
 
   const ticketId = useParams().id;
+  const error = props.errorMessage;
 
   const handleTextChange = (e) => {
     setText(e.target.value);
@@ -152,7 +156,7 @@ function AddBlock(props) {
         <Modal show={show} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>
-            {props.errorMessage && <h1 className="text-danger">{props.errorMessage}</h1>}
+            {error && <h1 className="text-danger">{props.errorMessage}</h1>}
               Add to ticket #{ticketId}
               </Modal.Title>
           </Modal.Header>
