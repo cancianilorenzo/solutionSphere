@@ -27,6 +27,9 @@ function App(props) {
 }, []);
 
   useEffect(() => {
+    if(!user){
+      setBlocks([]);//Empty array to avoid old states
+    }
     if(user){
       API.getBlocks().then((blocks) => setBlocks(blocks));
     }

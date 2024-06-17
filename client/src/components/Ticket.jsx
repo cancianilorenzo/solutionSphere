@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import MANAGER from "./Manager";
 import Badge from "react-bootstrap/Badge";
 import { Container, Row, Col } from "react-bootstrap";
+import DOMPurify from 'dompurify';
 
 const { EditModal } = MANAGER;
 
@@ -149,7 +150,7 @@ function Block(props) {
           </Col>
         </Row>
         <Row>
-          <Col xs={12}>{e.text}</Col>
+          <Col xs={12} style={{ whiteSpace: 'pre-line' }}>{DOMPurify.sanitize(e.text)}</Col>
         </Row>
       </Container>
     </Accordion.Body>

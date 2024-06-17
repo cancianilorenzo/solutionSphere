@@ -13,6 +13,16 @@ function CreateTicket(props) {
   const [textButton, setTextButton] = useState("Create ticket");
   const error = props.errorMessage;
 
+  const restore = () => { 
+    // setTitle("");
+    // setCategory("inquiry");
+    // setText("");
+    // setDisabled(false);
+    // setTextButton("Create ticket");
+    props.setErrorMessage("");
+    props.setDirty(true);
+  };
+
   const navigate = useNavigate();
 
   const handleTitleChange = (e) => {
@@ -39,8 +49,7 @@ function CreateTicket(props) {
     } else {
       API.createTicket({ title, category, text }).then((ticket) => {
         if (ticket) {
-          props.setErrorMessage("");
-          props.setDirty(true);
+          restore();
           navigate("/");
         } else {
           props.setErrorMessage("Failed to create the ticket");
@@ -122,6 +131,12 @@ function EditModal(props) {
   const [error, setError] = useState("");
   const [text, setText] = useState("");
 
+  const restore = () => {
+    props.setDirty(true);
+    setText("");
+    setError("");
+  };
+
   const handleCategoryChange = (e) => {
     setCategory(e.target.value);
   };
@@ -134,7 +149,7 @@ function EditModal(props) {
 
   const [show, setShow] = useState(false);
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => {restore(); setShow(false);};
   const handleShow = () => setShow(true);
 
   const handleSubmit = () => {
@@ -144,8 +159,6 @@ function EditModal(props) {
       const id = ticket.id;
       API.patchTicket({ id, category, state }).then((result) => {
         if (result) {
-          setError("");
-          props.setDirty(true);
           handleClose();
         } else {
           setError("Error in patching ticket");
