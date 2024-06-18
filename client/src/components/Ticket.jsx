@@ -1,43 +1,37 @@
 import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
 import LoginContext from "../context/loginContext";
-import { useContext, useState, useEffect } from "react";
-import API from "../API";
+import { useContext} from "react";
 import { Link } from "react-router-dom";
 import MANAGER from "./Manager";
 import Badge from "react-bootstrap/Badge";
 import { Container, Row, Col } from "react-bootstrap";
+import DOMPurify from 'dompurify';
 
-const { EditBlockModal } = MANAGER;
+const { EditModal } = MANAGER;
 
 function TicketRoute(props) {
-  const { user, setUser } = useContext(LoginContext);
-  const [blocks, setBlocks] = useState([]);
+  const blocks = props.blocks;
+  const { user } = useContext(LoginContext);
 
-  useEffect(() => {
-    if (user) {
-      API.getBlocks().then((blocks) => setBlocks(blocks));
-    }
-  }, [user]);
   return (
     <>
       <center>
         {user && (
           <Link to="/create">
             <Button variant="success" size="lg">
-              Add Ticket
+              Add Ticket{" "}
             </Button>
           </Link>
         )}
       </center>
       <p></p>
-      <Accordion alwaysOpen >
+      <Accordion alwaysOpen>
         {props.tickets.map((e, index) => (
           <Ticket
             key={index}
             ticket={e}
             blocks={blocks}
-            dirty={props.dirty}
             setDirty={props.setDirty}
           />
         ))}
@@ -46,31 +40,19 @@ function TicketRoute(props) {
   );
 }
 
-function Block(props) {
-  const e = props.block;
-  return (
-    <Accordion.Body>
-      <Container style={{ border: '1px solid black', padding: '10px', backgroundColor: '#f8f9fa' }}>
-        <Row>
-          <Col xs={12} md={6}>
-            Author: {e.author_username}
-          </Col>
-          <Col xs={12} md={6}>
-          Date: {e.timestamp}
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12}>{e.text}</Col>
-        </Row>
-      </Container>
-    </Accordion.Body>
-  );
-}
-
+//Component that contains the ticket and calls the Block component
 function Ticket(props) {
-  const { user, setUser } = useContext(LoginContext);
+  const { user } = useContext(LoginContext);
   const e = props.ticket;
   const { blocks } = props;
+
+  const ticketOpen = e.state !== "closed";
+  const loggedAdmin = user && user.role === "admin";
+  const loggedTicketOwner =
+    user &&
+    user.role !== "admin" &&
+    e.state !== "closed" &&
+    user.id === e.owner;
 
   return (
     <>
@@ -82,7 +64,7 @@ function Ticket(props) {
                 {e.title}
               </Col>
               <Col xs={12} md={2}>
-                <Badge bg="info"> {e.category} </Badge>
+                <Badge bg="info" style={{width: '120px'}}> {e.category} </Badge>
               </Col>
               <Col xs={12} md={2}>
                 {e.owner_username}
@@ -92,9 +74,9 @@ function Ticket(props) {
               </Col>
               <Col xs={12} md={1}>
                 {e.state === "open" ? (
-                  <Badge bg="success"> Open </Badge>
+                  <Badge bg="success" style={{width: '90px'}}> Open </Badge>
                 ) : (
-                  <Badge bg="danger">Closed</Badge>
+                  <Badge bg="danger" style={{width: '90px'}}>Closed</Badge>
                 )}
               </Col>
             </Row>
@@ -113,34 +95,65 @@ function Ticket(props) {
         )}
         {user && (
           <Accordion.Body>
-            {e.state !== "closed" && (
-              <Link to={`/add/${e.id}`}>
-                <Button variant="success">Add response</Button>
-              </Link>
+            {ticketOpen && (
+              // <Link to={`/add/${e.id}`}>
+              //   <Button variant="success">Add response</Button>
+              // </Link>
+              <EditModal
+              action={"Add response"}
+              block={e.id}
+              color={"success"}
+              dirty={props.dirty}
+              setDirty={props.setDirty}
+            ></EditModal>
             )}{" "}
-            {user && user.role === "admin" && (
-              <EditBlockModal
+            {loggedAdmin && (
+              <EditModal
                 action={"Edit ticket"}
                 ticket={e}
                 dirty={props.dirty}
                 setDirty={props.setDirty}
-              ></EditBlockModal>
+              ></EditModal>
             )}
-            {user &&
-              user.role !== "admin" &&
-              e.state !== "closed" &&
-              user.id === e.owner && (
-                <EditBlockModal
-                  action={"Close ticket"}
-                  ticket={e}
-                  dirty={props.dirty}
-                  setDirty={props.setDirty}
-                ></EditBlockModal>
-              )}
+            {loggedTicketOwner && (
+              <EditModal
+                action={"Close ticket"}
+                ticket={e}
+                dirty={props.dirty}
+                setDirty={props.setDirty}
+              ></EditModal>
+            )}
           </Accordion.Body>
         )}
       </Accordion.Item>
     </>
+  );
+}
+
+function Block(props) {
+  const e = props.block;
+  return (
+    <Accordion.Body>
+      <Container
+        style={{
+          border: "1px solid black",
+          padding: "10px",
+          backgroundColor: "#f8f9fa",
+        }}
+      >
+        <Row>
+          <Col xs={12} md={6}>
+            Author: {e.author_username}
+          </Col>
+          <Col xs={12} md={6}>
+            Date: {e.timestamp}
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12} style={{ whiteSpace: 'pre-line' }}>{DOMPurify.sanitize(e.text)}</Col>
+        </Row>
+      </Container>
+    </Accordion.Body>
   );
 }
 

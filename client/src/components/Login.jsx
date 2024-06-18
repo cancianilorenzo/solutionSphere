@@ -6,6 +6,7 @@ import { Form, Button } from "react-bootstrap";
 function LoginForm(props) {
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
+  const { setDirty } = props;
 
   const navigate = useNavigate();
 
@@ -21,13 +22,12 @@ function LoginForm(props) {
     e.preventDefault();
     API.login(username, password).then((user) => {
       if (user) {
+        setDirty(true);
         props.setErrorMessage("");
         props.loginSuccessful(user);
-        console.log("Logged in as", user);
         navigate("/");
       } else {
-        props.setErrorMessage("Failed to log in");
-        console.log("Failed to log in");
+        props.setErrorMessage("Wrong username or password!");
       }
     });
   };
