@@ -39,8 +39,8 @@ POST http://localhost:3001/api/sessions HTTP/1.1
 content-type: application/json
 
 {
-    "username": "user3",
-    "password": "password3",
+    "username": "admin1",
+    "password": "password1",
     "credentials": "include"
 }
 ###
@@ -61,4 +61,9 @@ content-type: application/json
     "state": "closed",
     "owner": 3
 }
+###
+
+
+## Get token
+GET http://localhost:3001/api/auth-token HTTP/1.1
 ###

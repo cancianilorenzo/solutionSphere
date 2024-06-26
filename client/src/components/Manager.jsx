@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import API from "../API";
 import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 
 function CreateTicket(props) {
@@ -12,13 +11,11 @@ function CreateTicket(props) {
   const [disabled, setDisabled] = useState(false);
   const [textButton, setTextButton] = useState("Create ticket");
   const error = props.errorMessage;
+  const jwt = props.jwt;
+  const setJwt = props.setJwt;
+  const [estimation, setEstimation] = useState(undefined);
 
-  const restore = () => { 
-    // setTitle("");
-    // setCategory("inquiry");
-    // setText("");
-    // setDisabled(false);
-    // setTextButton("Create ticket");
+  const restore = () => {
     props.setErrorMessage("");
     props.setDirty(true);
   };
@@ -46,6 +43,22 @@ function CreateTicket(props) {
     if (!disabled) {
       setDisabled(true);
       setTextButton("Confirm");
+      API.getEstimation(jwt, [{ title, category }])
+        .then((estimations) => {
+          const result = estimations.map((obj) => obj.estimation);
+          setEstimation(result);
+        })
+        .catch((err) => {
+          API.getAuthToken().then((resp) => {
+            setJwt(resp.token);
+            API.getEstimation(resp.token, [{ title, category }])
+              .then((estimations) => {
+                const result = estimations.map((obj) => obj.estimation);
+                setEstimation(result);
+              })
+              .catch((err) => console.error(err));
+          });
+        });
     } else {
       API.createTicket({ title, category, text }).then((ticket) => {
         if (ticket) {
@@ -70,6 +83,7 @@ function CreateTicket(props) {
         {error && <h1 className="text-danger">{props.errorMessage}</h1>}
         <Form onSubmit={handleSubmitTicket}>
           <fieldset disabled={disabled}>
+            {disabled && <h1>Estimation: {estimation}</h1>}
             <Form.Group controlId="title">
               <Form.Label>Title:</Form.Label>
               <Form.Control
@@ -149,7 +163,10 @@ function EditModal(props) {
 
   const [show, setShow] = useState(false);
 
-  const handleClose = () => {restore(); setShow(false);};
+  const handleClose = () => {
+    restore();
+    setShow(false);
+  };
   const handleShow = () => setShow(true);
 
   const handleSubmit = () => {
@@ -235,9 +252,11 @@ function EditModal(props) {
             <Form>
               <Form.Group controlId="text">
                 <Form.Label>Response:</Form.Label>
-                <Form.Control as="textarea"
-                value={text}
-                onChange={handleTextChange} />
+                <Form.Control
+                  as="textarea"
+                  value={text}
+                  onChange={handleTextChange}
+                />
               </Form.Group>
               <p></p>
             </Form>

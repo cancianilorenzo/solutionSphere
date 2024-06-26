@@ -5,13 +5,19 @@ const morgan = require("morgan");
 const cors = require("cors");
 
 //Tickets
-const { body, query, validationResult } = require("express-validator");
+const { body, query, validationResult, param } = require("express-validator");
 const ticketDao = require("./dao-tickets");
 
 //AuthN
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const userDao = require("./dao-users");
+
+//Server 2
+const jsonwebtoken = require('jsonwebtoken');
+const jwtSecret = '201362858dd0d0e5e5c4105228dd54b8be10aba87f4992aa428c0f93aed74ebc';
+const expireTime = 60;
+
 
 //Server
 const app = new express();
@@ -88,7 +94,7 @@ app.get("/api/tickets", (req, res) => {
 app.get("/api/blocks", [isLoggedIn], (req, res) => {
   ticketDao
     .listBlocks()
-    .then((blocks) => res.json(blocks))
+    .then((blocks) => res.status(200).json(blocks))
     .catch((err) => res.status(500).json(err));
 });
 
@@ -126,7 +132,7 @@ app.post(
     }
     ticketDao
       .createTicket(ticket)
-      .then((response) => res.json(response))
+      .then((response) => res.status(200).json(response))
       .catch((err) => res.status(500).json(err));
   }
 );
@@ -158,25 +164,20 @@ app.post(
     if (!userDao.getUserById(block.author)) {
       return res.status(400).json({ error: "User does not exist" });
     }
-    if (!ticketDao.getTicketById(block.ticketId)) {
-      return res.status(400).json({ error: "Ticket does not exist" });
+    const ticket = ticketDao.getTicketById(block.ticketId);
+    if (!ticket || ticket.state === "closed") {
+      return res.status(400).json({ error: "Ticket does not exist or ticket closed" });
     }
     ticketDao
       .createBlock(block)
-      .then((response) => res.json(response))
+      .then((response) => res.status(200).json(response))
       .catch((err) => res.status(500).json(err));
   }
 );
 
 app.patch(
-  "/api/ticket",
-  [
-    body("id")
-      .not()
-      .isEmpty()
-      .withMessage("Id should not be empty")
-      .isInt()
-      .withMessage("Id should be an integer"),
+  "/api/ticket/:id",
+  [ param("id").isInt().withMessage("Id should be an integer"),
     body("category")
       .optional()
       .isIn(validCategories)
@@ -196,7 +197,7 @@ app.patch(
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const oldTicket = await ticketDao.getTicketById(req.body.id);
+    const oldTicket = await ticketDao.getTicketById(req.params.id);
     if (!oldTicket) {
       return res.status(400).json({ error: "Ticket does not exist" });
     }
@@ -213,7 +214,7 @@ app.patch(
     oldTicket.state = req.body.state || oldTicket.state;
     ticketDao
       .patchTicket(oldTicket)
-      .then((response) => res.json(response))
+      .then((response) => res.status(200).json(response))
       .catch((err) => res.status(500).json(err));
   }
 );
@@ -226,7 +227,7 @@ app.post("/api/sessions", function (req, res, next) {
     }
     req.login(user, (err) => {
       if (err) return next(err);
-      return res.json(req.user);
+      return res.status(200).json(req.user);
     });
   })(req, res, next);
 });
@@ -241,6 +242,17 @@ app.delete("/api/sessions/current", (req, res) => {
   req.logout(() => {
     res.status(200).json({});
   });
+});
+
+
+app.get('/api/auth-token', isLoggedIn, (req, res) => {
+  const role = req.user.role;
+  const id = req.user.id;
+
+  const payloadToSign = { role: role, id: id };
+  const jwtToken = jsonwebtoken.sign(payloadToSign, jwtSecret, {expiresIn: expireTime});
+
+  res.status(200).json({token: jwtToken, role: role});
 });
 
 app.listen(port, () => {
