@@ -88,7 +88,9 @@ app.get("/api/tickets", (req, res) => {
   ticketDao
     .listTickets()
     .then((tickets) => res.json(tickets))
-    .catch((err) => res.status(500).json(err));
+    .catch((err) => {console.log('Sono in errore');res.status(500).json(err)
+
+    });
 });
 
 app.get("/api/blocks", [isLoggedIn], (req, res) => {
@@ -258,3 +260,5 @@ app.get('/api/auth-token', isLoggedIn, (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
+
+module.exports = app;

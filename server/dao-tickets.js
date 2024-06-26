@@ -65,7 +65,7 @@ exports.listBlocks = () => {
   `;
     db.all(sql, (err, rows) => {
       if (err) {
-        reject(err);
+        return reject(err);
       }
       const blocks = rows.map((e) => {
         return e;
@@ -93,12 +93,12 @@ exports.createTicket = (ticket) => {
           [owner, state, title, timestamp, category],
           function (err) {
             if (err) {
-              console.error("Failed to insert into tickets", err.message);
               db.run("ROLLBACK", (rollbackErr) => {
                 if (rollbackErr) {
-                  reject("Failed to rollback transaction", rollbackErr.message);
+                  return reject("Failed to rollback transaction", rollbackErr.message);
                 }
               });
+              return reject("Failed to insert into tickets");
             }
             ticket.id = this.lastID;
             const { id, owner, timestamp, text } = ticket;
@@ -106,22 +106,22 @@ exports.createTicket = (ticket) => {
               "INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)";
             db.run(sqlBlock, [id, owner, timestamp, text], function (err) {
               if (err) {
-                reject("Failed to insert into blocks", err.message);
                 db.run("ROLLBACK", (rollbackErr) => {
                   if (rollbackErr) {
-                    reject(
+                    return reject(
                       "Failed to rollback transaction",
                       rollbackErr.message
                     );
                   }
                 });
+                return reject("Failed to insert into blocks", err.message);
               }
 
               db.run("COMMIT", (commitErr) => {
                 if (commitErr) {
-                  reject("Failed to commit transaction", commitErr.message);
+                  return reject("Failed to commit transaction", commitErr.message);
                 } else {
-                  resolve("Transaction committed successfully.");
+                  return resolve("Transaction committed successfully.");
                 }
               });
             });
@@ -141,10 +141,10 @@ exports.createBlock = (block) => {
     const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
     db.get(sqlCheck, [ticketId], (err, row) => {
       if (err) {
-        reject(err);
+        return reject(err);
       }
       if (!row) {
-        reject("Ticket with that id does not exist");
+        return reject("Ticket with that id does not exist");
       }
     });
     const sql =
