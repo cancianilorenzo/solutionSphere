@@ -1,6 +1,7 @@
 "use strict";
 
 const SERVER_URL = "http://localhost:3001/api/";
+const SERVER_SUPPORT = "http://localhost:3002/";
 
 import dayjs from "dayjs";
 
@@ -105,7 +106,7 @@ function createBlock(block) {
 }
 
 function patchTicket(ticket) {
-  return fetch(SERVER_URL + "ticket", {
+  return fetch(SERVER_URL + "ticket/" + ticket.id, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -205,6 +206,36 @@ function getInfo() {
     });
 }
 
+async function getAuthToken() {
+  const response = await fetch(SERVER_URL+'auth-token', {
+    credentials: 'include'
+  });
+  const token = await response.json();
+  if (response.ok) {
+    return token;
+  } else {
+    throw token;
+  }
+}
 
-const API = { getTickets, getBlocks, login, logout, createTicket, createBlock, getInfo, patchTicket };
+async function getEstimation(authToken, tickets) {
+  // retrieve info from an external server, where info can be accessible only via JWT token
+  const response = await fetch(SERVER_SUPPORT+`estimation`, {
+    method: 'POST',
+    headers: { 
+      'Authorization': `Bearer ${authToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({tickets: tickets }),
+  });
+  const info = await response.json();
+  if (response.ok) {
+    return info;
+  } else {
+    throw info;  // expected to be a json object (coming from the server) with info about the error
+  }
+}
+
+
+const API = { getTickets, getBlocks, login, logout, createTicket, createBlock, getInfo, patchTicket, getAuthToken, getEstimation};
 export default API;

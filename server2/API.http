@@ -1,0 +1,21 @@
+## Create new block 
+POST http://localhost:3002/estimation HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpZCI6MSwiaWF0IjoxNzE5MDkzMDIwLCJleHAiOjE3NTUwOTMwMjB9.bbWH1NJ-swhytzGmycmZ3VMWL04HQIXqFdSdpnIgEl4
+
+{
+    "tickets": [
+        {
+            "category": "payment",
+            "title": "Ticket 1"
+        },
+        {
+            "category": "mainteinance",
+            "title": "Ticket 2"
+        },
+        {
+            "category": "feature",
+            "title": "Ticket 3"
+        }
+    ]
+}

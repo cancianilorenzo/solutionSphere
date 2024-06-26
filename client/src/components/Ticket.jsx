@@ -1,12 +1,12 @@
 import Accordion from "react-bootstrap/Accordion";
 import Button from "react-bootstrap/Button";
 import LoginContext from "../context/loginContext";
-import { useContext} from "react";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
 import MANAGER from "./Manager";
 import Badge from "react-bootstrap/Badge";
 import { Container, Row, Col } from "react-bootstrap";
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 
 const { EditModal } = MANAGER;
 
@@ -29,6 +29,7 @@ function TicketRoute(props) {
       <Accordion alwaysOpen>
         {props.tickets.map((e, index) => (
           <Ticket
+            estimations={props.estimations}
             key={index}
             ticket={e}
             blocks={blocks}
@@ -45,6 +46,7 @@ function Ticket(props) {
   const { user } = useContext(LoginContext);
   const e = props.ticket;
   const { blocks } = props;
+  const estimations = props.estimations;
 
   const ticketOpen = e.state !== "closed";
   const loggedAdmin = user && user.role === "admin";
@@ -59,25 +61,37 @@ function Ticket(props) {
       <Accordion.Item eventKey={e.id}>
         <Accordion.Header>
           <Container>
-            <Row>
-              <Col xs={12} md={2}>
+            <Row className="justify-content-between">
+              <Col xs={12} md={2} className="d-flex justify-content-center">
                 {e.title}
               </Col>
-              <Col xs={12} md={2}>
-                <Badge bg="info" style={{width: '120px'}}> {e.category} </Badge>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
+                <Badge bg="info" style={{ width: "120px" }}>
+                  {" "}
+                  {e.category}{" "}
+                </Badge>
               </Col>
-              <Col xs={12} md={2}>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
                 {e.owner_username}
               </Col>
-              <Col xs={12} md={2}>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
                 {e.timestamp}
               </Col>
-              <Col xs={12} md={1}>
+              <Col xs={12} md={1} className="d-flex justify-content-center">
                 {e.state === "open" ? (
-                  <Badge bg="success" style={{width: '90px'}}> Open </Badge>
+                  <Badge bg="success" style={{ width: "90px" }}>
+                    {" "}
+                    Open{" "}
+                  </Badge>
                 ) : (
-                  <Badge bg="danger" style={{width: '90px'}}>Closed</Badge>
+                  <Badge bg="danger" style={{ width: "90px" }}>
+                    Closed
+                  </Badge>
                 )}
+              </Col>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
+                {/* {!estimations && !estimations[e.id - 1] && "..."} */}
+                {user && user.role === 'admin' && <Badge bg="primary">{estimations[e.id - 1]} <p>hours</p></Badge>}
               </Col>
             </Row>
           </Container>
@@ -100,12 +114,12 @@ function Ticket(props) {
               //   <Button variant="success">Add response</Button>
               // </Link>
               <EditModal
-              action={"Add response"}
-              block={e.id}
-              color={"success"}
-              dirty={props.dirty}
-              setDirty={props.setDirty}
-            ></EditModal>
+                action={"Add response"}
+                block={e.id}
+                color={"success"}
+                dirty={props.dirty}
+                setDirty={props.setDirty}
+              ></EditModal>
             )}{" "}
             {loggedAdmin && (
               <EditModal
@@ -150,7 +164,9 @@ function Block(props) {
           </Col>
         </Row>
         <Row>
-          <Col xs={12} style={{ whiteSpace: 'pre-line' }}>{DOMPurify.sanitize(e.text)}</Col>
+          <Col xs={12} style={{ whiteSpace: "pre-line" }}>
+            {DOMPurify.sanitize(e.text)}
+          </Col>
         </Row>
       </Container>
     </Accordion.Body>
