@@ -203,6 +203,8 @@ app.patch(
     if (!oldTicket) {
       return res.status(400).json({ error: "Ticket does not exist" });
     }
+    req.body.category = req.body.category || oldTicket.category;
+    req.body.state = req.body.state || oldTicket.state;
     if (req.user.role !== "admin" && (req.body.category!== oldTicket.category)) {
       return res.status(403).json({ error: "Not authorized to change category" });
     }

@@ -10,9 +10,7 @@ function CreateTicket(props) {
   const [text, setText] = useState(props.text || "");
   const [disabled, setDisabled] = useState(false);
   const [textButton, setTextButton] = useState("Create ticket");
-  const error = props.errorMessage;
-  const jwt = props.jwt;
-  const setJwt = props.setJwt;
+  const { error, jwt, setJwt } = props;
   const [estimation, setEstimation] = useState(undefined);
 
   const restore = () => {
@@ -21,18 +19,6 @@ function CreateTicket(props) {
   };
 
   const navigate = useNavigate();
-
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleCategoryChange = (e) => {
-    setCategory(e.target.value);
-  };
-
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-  };
 
   const handleSubmitTicket = (e) => {
     e.preventDefault();
@@ -77,6 +63,10 @@ function CreateTicket(props) {
     return <createTicket category={category} title={title} text={text} />;
   };
 
+  const handleBack = () => {
+      navigate("/");
+  }
+
   return (
     <>
       <center>
@@ -89,7 +79,9 @@ function CreateTicket(props) {
               <Form.Control
                 type="text"
                 value={title}
-                onChange={handleTitleChange}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                }}
               />
             </Form.Group>
 
@@ -98,7 +90,9 @@ function CreateTicket(props) {
               <Form.Control
                 as="select"
                 value={category}
-                onChange={handleCategoryChange}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                }}
               >
                 <option value="inquiry">Inquiry</option>
                 <option value="maintenance">Maintenance</option>
@@ -113,19 +107,24 @@ function CreateTicket(props) {
               <Form.Control
                 as="textarea"
                 value={text}
-                onChange={handleTextChange}
+                onChange={(e) => {
+                  setText(e.target.value);
+                }}
               />
             </Form.Group>
             <p></p>
           </fieldset>
           <center>
             {disabled && (
-              <Button variant="primary" onClick={handleEdit}>
+              <Button variant="warning" onClick={handleEdit}>
                 Edit
               </Button>
             )}
             <p></p>
-            <Button variant="primary" type="submit">
+            <Button variant="danger" onClick={handleBack}>
+              Back
+            </Button>{" "}
+            <Button variant="success" type="submit">
               {textButton}
             </Button>
           </center>
@@ -135,140 +134,64 @@ function CreateTicket(props) {
   );
 }
 
-function EditModal(props) {
-  const { ticket } = props;
-  const { block } = props;
-  const id = block ? block : ticket.id;
-  const { action } = props;
-  const [category, setCategory] = useState(ticket ? ticket.category : "");
-  const [checked, setChecked] = useState(true);
-  const [error, setError] = useState("");
-  const [text, setText] = useState("");
-
-  const restore = () => {
-    props.setDirty(true);
-    setText("");
-    setError("");
-  };
-
-  const handleCategoryChange = (e) => {
-    setCategory(e.target.value);
-  };
-  const handleChange = () => {
-    setChecked(!checked);
-  };
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-  };
-
+function AddResponse(props) {
   const [show, setShow] = useState(false);
+  const [text, setText] = useState("");
+  const { id } = props;
+  const [error, setError] = useState("");
 
   const handleClose = () => {
-    restore();
     setShow(false);
+    setError("");
   };
   const handleShow = () => setShow(true);
 
-  const handleSubmit = () => {
-    if (ticket) {
-      let state = "closed";
-      checked ? (state = "closed") : (state = "open");
-      const id = ticket.id;
-      API.patchTicket({ id, category, state }).then((result) => {
-        if (result) {
-          handleClose();
-        } else {
-          setError("Error in patching ticket");
-        }
-      });
-    }
-    if (block) {
-      if (text === "") {
-        props.setErrorMessage("Please fill in all fields");
-        return;
+  function handleAddResponse() {
+    API.createBlock({ text, id }).then((block) => {
+      if (block) {
+        props.setDirty(true);
+        handleClose();
+      } else {
+        setError("Error in patching ticket");
       }
-      API.createBlock({ text, id }).then((block) => {
-        if (block) {
-          setError("");
-          props.setDirty(true);
-          handleClose();
-        } else {
-          setError("Error in patching ticket");
-        }
-      });
-    }
-  };
+    });
+  }
 
   return (
     <>
-      <Button variant={props.color || "warning"} onClick={handleShow}>
-        {action}
+      <Button variant="success" onClick={handleShow}>
+        Add response
       </Button>
 
       <Modal show={show} onHide={handleClose}>
+        {error && <h1 className="text-danger">{error}</h1>}
         <Modal.Header closeButton>
-          <Modal.Title>
-            {error && <h1 className="text-danger">{error}</h1>}
-            {ticket && "Edit ticket"}
-            {block && "Add response"}
-          </Modal.Title>
+          <Modal.Title>New response</Modal.Title>
         </Modal.Header>
-        {action === "Close ticket" && (
-          <Modal.Body>Click Save Changes to close ticket</Modal.Body>
-        )}
-        {block && (
-          <Modal.Body>Click Add Response to sumbit response</Modal.Body>
-        )}
-
         <Modal.Body>
-          {action === "Edit ticket" && (
-            <Form>
-              <Form.Group controlId="category">
-                <Form.Label>Category:</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={category}
-                  onChange={handleCategoryChange}
-                >
-                  <option value={category}>{category}</option>
-                  <option value="inquiry">Inquiry</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="new feature">New feature</option>
-                  <option value="administrative">Administrative</option>
-                  <option value="payment">Payment</option>
-                </Form.Control>
-              </Form.Group>
-              <p></p>
-              <Form.Check
-                type="checkbox"
-                id="custom-checkbox"
-                label="closed"
-                checked={checked}
-                onChange={handleChange}
+          <Form>
+            <Form.Group
+              className="mb-3"
+              controlId="exampleForm.ControlTextarea1"
+            >
+              <Form.Label>Insert below your response</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                autoFocus
+                onChange={(e) => {
+                  setText(e.target.value);
+                }}
               />
-            </Form>
-          )}
-          {block && (
-            <Form>
-              <Form.Group controlId="text">
-                <Form.Label>Response:</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  value={text}
-                  onChange={handleTextChange}
-                />
-              </Form.Group>
-              <p></p>
-            </Form>
-          )}
+            </Form.Group>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Back
+          <Button variant="danger" onClick={handleClose}>
+            Close
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            {ticket && `Save Changes`}
-            {block && `Add Response`}
+          <Button variant="success" onClick={handleAddResponse}>
+            Add response
           </Button>
         </Modal.Footer>
       </Modal>
@@ -276,5 +199,78 @@ function EditModal(props) {
   );
 }
 
-const MANAGER = { CreateTicket, EditModal };
+function EditCategory(props) {
+  const [show, setShow] = useState(false);
+  const [category, setCategory] = useState(props.category);
+  const { id, setDirty } = props;
+  const [error, setError] = useState("");
+
+  const handleClose = () => {
+    setShow(false);
+    setError("");
+  };
+  const handleShow = () => setShow(true);
+
+  function handleEditCategory() {
+    API.patchTicket({ id, category }).then((ticket) => {
+      if (ticket) {
+        setDirty(true);
+        handleClose();
+      } else {
+        setError("Error in patching ticket");
+      }
+    });
+  }
+
+  return (
+    <>
+      <Button variant="warning" onClick={handleShow}>
+        Edit category
+      </Button>
+
+      <Modal show={show} onHide={handleClose}>
+        {error && <h1 className="text-danger">{error}</h1>}
+        <Modal.Header closeButton>
+          <Modal.Title>Edit category</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group
+              className="mb-3"
+              controlId="exampleForm.ControlTextarea1"
+            >
+              <Form.Label>Insert below the new category</Form.Label>
+              <Form.Control
+                as="select"
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                }}
+              >
+                <option>
+                  {props.category.charAt(0).toUpperCase() +
+                    props.category.slice(1)}
+                </option>
+                <option value="inquiry">Inquiry</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="new feature">New feature</option>
+                <option value="administrative">Administrative</option>
+                <option value="payment">Payment</option>
+              </Form.Control>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="success" onClick={handleEditCategory}>
+            Edit category
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+}
+
+const MANAGER = { CreateTicket, AddResponse, EditCategory };
 export default MANAGER;

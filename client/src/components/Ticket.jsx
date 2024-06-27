@@ -7,8 +7,9 @@ import MANAGER from "./Manager";
 import Badge from "react-bootstrap/Badge";
 import { Container, Row, Col } from "react-bootstrap";
 import DOMPurify from "dompurify";
+import API from "../API";
 
-const { EditModal } = MANAGER;
+const { AddResponse, EditCategory} = MANAGER;
 
 function TicketRoute(props) {
   const blocks = props.blocks;
@@ -44,61 +45,114 @@ function TicketRoute(props) {
 //Component that contains the ticket and calls the Block component
 function Ticket(props) {
   const { user } = useContext(LoginContext);
-  const e = props.ticket;
-  const { blocks } = props;
+  const { blocks, setDirty, ticket } = props;
   const estimations = props.estimations;
 
-  const ticketOpen = e.state !== "closed";
+
+  const ticketOpen = ticket.state !== "closed";
   const loggedAdmin = user && user.role === "admin";
   const loggedTicketOwner =
     user &&
     user.role !== "admin" &&
-    e.state !== "closed" &&
-    user.id === e.owner;
+    ticket.state !== "closed" &&
+    user.id === ticket.owner;
+
+  function handleCloseTicket() {
+    API.patchTicket({ id: ticket.id, state: "closed" }).then((result) => {
+      if (result) {
+        setDirty(true);
+      }
+    });
+  }
+
+  function handleOpenTicket() {
+    API.patchTicket({ id: ticket.id, state: "open" }).then((result) => {
+      if (result) {
+        setDirty(true);
+      }
+    });
+  }
 
   return (
     <>
-      <Accordion.Item eventKey={e.id}>
+      <Accordion.Item eventKey={ticket.id}>
         <Accordion.Header>
           <Container>
             <Row className="justify-content-between">
               <Col xs={12} md={2} className="d-flex justify-content-center">
-                {e.title}
+                {ticket.title}
               </Col>
               <Col xs={12} md={2} className="d-flex justify-content-center">
-                <Badge bg="info" style={{ width: "120px" }}>
-                  {" "}
-                  {e.category}{" "}
+                <Badge
+                  bg="info"
+                  style={{
+                    width: "120px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "40px", // Imposta un'altezza per il badge
+                  }}
+                >
+                  {ticket.category}
                 </Badge>
               </Col>
               <Col xs={12} md={2} className="d-flex justify-content-center">
-                {e.owner_username}
+                {ticket.owner_username}
               </Col>
               <Col xs={12} md={2} className="d-flex justify-content-center">
-                {e.timestamp}
+                {ticket.timestamp}
               </Col>
               <Col xs={12} md={1} className="d-flex justify-content-center">
-                {e.state === "open" ? (
-                  <Badge bg="success" style={{ width: "90px" }}>
-                    {" "}
-                    Open{" "}
+                {ticket.state === "open" ? (
+                  <Badge
+                    bg="success"
+                    style={{
+                      width: "120px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "40px", // Imposta un'altezza per il badge
+                    }}
+                  >
+                    Open
                   </Badge>
                 ) : (
-                  <Badge bg="danger" style={{ width: "90px" }}>
+                  <Badge
+                    bg="danger"
+                    style={{
+                      width: "120px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "40px", // Imposta un'altezza per il badge
+                    }}
+                  >
                     Closed
                   </Badge>
                 )}
               </Col>
               <Col xs={12} md={2} className="d-flex justify-content-center">
-                {/* {!estimations && !estimations[e.id - 1] && "..."} */}
-                {user && user.role === 'admin' && <Badge bg="primary">{estimations[e.id - 1]} <p>hours</p></Badge>}
+                {user && user.role === "admin" && (
+                  <Badge
+                    bg="primary"
+                    style={{
+                      width: "120px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "40px", // Imposta un'altezza per il badge
+                    }}
+                  >
+                    {estimations[ticket.id - 1] + " hours"}
+                  </Badge>
+                )}
               </Col>
             </Row>
           </Container>
         </Accordion.Header>
         {user ? (
           blocks
-            .filter((block) => block.ticket === e.id)
+            .filter((block) => block.ticket === ticket.id)
             .map((block, index) => <Block key={index} block={block} />)
         ) : (
           <Accordion.Body>
@@ -110,33 +164,19 @@ function Ticket(props) {
         {user && (
           <Accordion.Body>
             {ticketOpen && (
-              // <Link to={`/add/${e.id}`}>
-              //   <Button variant="success">Add response</Button>
-              // </Link>
-              <EditModal
-                action={"Add response"}
-                block={e.id}
-                color={"success"}
-                dirty={props.dirty}
-                setDirty={props.setDirty}
-              ></EditModal>
+              <AddResponse id={ticket.id} setDirty={props.setDirty}></AddResponse>
             )}{" "}
-            {loggedAdmin && (
-              <EditModal
-                action={"Edit ticket"}
-                ticket={e}
-                dirty={props.dirty}
-                setDirty={props.setDirty}
-              ></EditModal>
-            )}
-            {loggedTicketOwner && (
-              <EditModal
-                action={"Close ticket"}
-                ticket={e}
-                dirty={props.dirty}
-                setDirty={props.setDirty}
-              ></EditModal>
-            )}
+            {loggedAdmin && !ticketOpen && (
+              <Button variant="warning" onClick={handleOpenTicket}>
+                Reopen tickt
+              </Button>
+            )}{" "}
+            {(loggedTicketOwner || loggedAdmin) && (
+              <Button variant="danger" onClick={handleCloseTicket}>
+                Close ticket
+              </Button>
+            )}{" "}
+            {loggedAdmin && <EditCategory id={ticket.id} setDirty={setDirty} category={ticket.category}></EditCategory>}
           </Accordion.Body>
         )}
       </Accordion.Item>
@@ -145,7 +185,7 @@ function Ticket(props) {
 }
 
 function Block(props) {
-  const e = props.block;
+  const { block } = props;
   return (
     <Accordion.Body>
       <Container
@@ -157,15 +197,15 @@ function Block(props) {
       >
         <Row>
           <Col xs={12} md={6}>
-            Author: {e.author_username}
+            Author: {block.author_username}
           </Col>
           <Col xs={12} md={6}>
-            Date: {e.timestamp}
+            Date: {block.timestamp}
           </Col>
         </Row>
         <Row>
           <Col xs={12} style={{ whiteSpace: "pre-line" }}>
-            {DOMPurify.sanitize(e.text)}
+            {DOMPurify.sanitize(block.text)}
           </Col>
         </Row>
       </Container>
