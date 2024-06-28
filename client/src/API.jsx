@@ -201,7 +201,6 @@ function getInfo() {
       return user;
     })
     .catch((error) => {
-      console.error("Failed to get user info", error);
       return null;
     });
 }

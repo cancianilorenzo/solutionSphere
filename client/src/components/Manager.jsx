@@ -174,6 +174,7 @@ function AddResponse(props) {
       .catch((err) => {
         setError(err);
       });
+      setText("");
   }
 
   return (
