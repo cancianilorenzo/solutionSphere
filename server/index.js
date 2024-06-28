@@ -16,7 +16,7 @@ const userDao = require("./dao-users");
 //Server 2
 const jsonwebtoken = require('jsonwebtoken');
 const jwtSecret = '201362858dd0d0e5e5c4105228dd54b8be10aba87f4992aa428c0f93aed74ebc';
-const expireTime = 60;
+const expireTime = 30;
 
 
 //Server
@@ -55,7 +55,7 @@ const session = require("express-session");
 
 app.use(
   session({
-    secret: "Mamma, anche quest'anno niente vacanze", //TODO
+    secret: "G4h9yVb2R3f8LdO6pQ0kJ7mT1uX5cWz3vBnE7aF5cK8tY2oP0sD4xG6jM1lI9U4",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -88,7 +88,9 @@ app.get("/api/tickets", (req, res) => {
   ticketDao
     .listTickets()
     .then((tickets) => res.json(tickets))
-    .catch((err) => res.status(500).json(err));
+    .catch((err) => {res.status(500).json(err)
+
+    });
 });
 
 app.get("/api/blocks", [isLoggedIn], (req, res) => {
@@ -201,6 +203,8 @@ app.patch(
     if (!oldTicket) {
       return res.status(400).json({ error: "Ticket does not exist" });
     }
+    req.body.category = req.body.category || oldTicket.category;
+    req.body.state = req.body.state || oldTicket.state;
     if (req.user.role !== "admin" && (req.body.category!== oldTicket.category)) {
       return res.status(403).json({ error: "Not authorized to change category" });
     }
@@ -258,3 +262,5 @@ app.get('/api/auth-token', isLoggedIn, (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
+
+module.exports = app;

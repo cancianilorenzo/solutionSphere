@@ -1,7 +1,5 @@
 //TODO
-//Code refactoring (?)
 //Jest testing
-
 
 import { useState, useEffect } from "react";
 import TicketRoute from "./components/Ticket.jsx";
@@ -16,13 +14,18 @@ import exportedObject from "./components/Manager";
 function App(props) {
   const [user, setUser] = useState(null); //Previolusly undefined
   const [tickets, setTickets] = useState([]);
-  const [errorMessage, setErrorMessage] = useState(null);
   const [dirty, setDirty] = useState(true);
   const [blocks, setBlocks] = useState([]);
+  const [updateBlocks, setUpdateBlocks] = useState(true);
   const [jwt, setJwt] = useState(null);
   const [TimeEstimations, setEstimations] = useState([]);
+  const [error, setError] = useState("");
 
   const { CreateTicket } = exportedObject;
+
+  const getJwt = () => {
+    API.getAuthToken().then((resp) => setJwt(resp.token));
+  };
 
   //Every 3 mins refresh filmList --> update from other users!
   useEffect(() => {
@@ -31,46 +34,6 @@ function App(props) {
     }, 180000);
   }, []);
 
-  const getJwt = () => {
-    API.getAuthToken().then((resp) => setJwt(resp.token));
-  }
-
-  //UseEffect for basic application logic
-  useEffect(() => {
-    if (!user) {
-      setErrorMessage(null); //Flush error message
-      setBlocks([]); //Empty array to avoid old states
-      setJwt(null); //Flush jwt
-    }
-    if (user) {
-      setErrorMessage(null); //Flush error message
-      API.getBlocks().then((blocks) => setBlocks(blocks));
-      getJwt();
-    }
-    if (dirty) {
-      API.getTickets().then((tickets) => setTickets(tickets));
-      setDirty(false);
-    }
-  }, [dirty, user]);
-
-
-  //UseEffect to fretrieve estimations
-  useEffect(() => {
-    if (jwt) {
-      // console.log(jwt);
-      if (user.role === "admin") {
-        // console.log("Admin");
-        API.getEstimation(jwt, tickets)
-          .then((estimations) => {
-            const result = estimations.map(obj => obj.estimation);
-            setEstimations(result);
-          })
-          .catch((err) => console.error(err));
-      }
-    }
-  }, [jwt, tickets]);
-
-
   //UseEffect for checking authN
   useEffect(() => {
     const checkAuth = async () => {
@@ -78,19 +41,70 @@ function App(props) {
         const user = await API.getInfo();
         setUser(user);
       } catch (err) {
-        console.error(err);
+        null;
       }
     };
     checkAuth();
   }, []);
 
+  //UseEffect for basic application logic
+  useEffect(() => {
+    if (!user) {
+      setBlocks([]); //Empty array to avoid old states
+      setJwt(null); //Flush jwt
+    }
+    if (user && updateBlocks) {
+      API.getBlocks().then((blocks) => setBlocks(blocks));
+      getJwt();
+      setUpdateBlocks(false);
+    }
+
+    if (dirty) {
+      API.getTickets()
+        .then((tickets) => setTickets(tickets))
+        .catch((err) => null);
+      setDirty(false);
+    }
+  }, [dirty, user, updateBlocks]);
+
+
+  //TODO setError and show error
+  //UseEffect to retrieve estimations
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        API.getEstimation(jwt, tickets)
+          .then((estimations) => {
+            const result = estimations.map((obj) => obj.estimation);
+            setEstimations(result);
+          })
+          .catch((err) => {
+            API.getAuthToken()
+              .then((resp) => {
+                setJwt(resp.token);
+                API.getEstimation(resp.token, tickets)
+                  .then((estimations) => {
+                    const result = estimations.map((obj) => obj.estimation);
+                    setEstimations(result);
+                  })
+                  .catch((err) => setError(err));
+              })
+              .catch((err) => setError(err));
+          });
+      }
+      // }
+    }
+  }, [tickets]);
+
   const loginSuccesful = (user) => {
     setUser(user);
+    setDirty(true);
+    setUpdateBlocks(true);
   };
 
   const logout = () => {
-    API.logout().catch((err) => console.error(err));
-    setUser(undefined);
+    API.logout().catch((err) => setError(err));
+    setUser(null);
   };
 
   return (
@@ -106,8 +120,8 @@ function App(props) {
                   tickets={tickets}
                   setDirty={setDirty}
                   blocks={blocks}
-                  errorMessage={errorMessage}
-                  setErrorMessage={setErrorMessage}
+                  setUpdateBlocks={setUpdateBlocks}
+                  error={error}
                 />
               }
             />
@@ -116,11 +130,10 @@ function App(props) {
                 path="/create"
                 element={
                   <CreateTicket
-                    errorMessage={errorMessage}
-                    setErrorMessage={setErrorMessage}
                     setDirty={setDirty}
                     jwt={jwt}
                     setJwt={setJwt}
+                    setUpdateBlocks={setUpdateBlocks}
                   />
                 }
               />
@@ -129,9 +142,8 @@ function App(props) {
               path="/login"
               element={
                 <LoginForm
-                  errorMessage={errorMessage}
-                  setErrorMessage={setErrorMessage}
                   loginSuccessful={loginSuccesful}
+                  logout={logout}
                   setDirty={setDirty}
                 />
               }

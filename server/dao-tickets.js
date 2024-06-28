@@ -23,21 +23,6 @@ exports.listTickets = () => {
   });
 };
 
-// exports.listTickets = () => {
-//   return new Promise((resolve, reject) => {
-//     const sql = "SELECT * FROM tickets JOIN users ON tickets.owner = users.id";
-//     db.all(sql, (err, rows) => {
-//       if (err) {
-//         reject(err);
-//       }
-//       const tickets = rows.map((e) => {
-//         return e;
-//       });
-//       resolve(tickets);
-//     });
-//   });
-// };
-
 // exports.listBlocksByTicket = (id) => {
 //   return new Promise((resolve, reject) => {
 //     const sql = "SELECT * FROM blocks WHERE ticket = ?";
@@ -65,7 +50,7 @@ exports.listBlocks = () => {
   `;
     db.all(sql, (err, rows) => {
       if (err) {
-        reject(err);
+        return reject(err);
       }
       const blocks = rows.map((e) => {
         return e;
@@ -93,12 +78,12 @@ exports.createTicket = (ticket) => {
           [owner, state, title, timestamp, category],
           function (err) {
             if (err) {
-              console.error("Failed to insert into tickets", err.message);
               db.run("ROLLBACK", (rollbackErr) => {
                 if (rollbackErr) {
-                  reject("Failed to rollback transaction", rollbackErr.message);
+                  return reject("Failed to rollback transaction", rollbackErr.message);
                 }
               });
+              return reject("Failed to insert into tickets");
             }
             ticket.id = this.lastID;
             const { id, owner, timestamp, text } = ticket;
@@ -106,22 +91,22 @@ exports.createTicket = (ticket) => {
               "INSERT INTO blocks (ticket, author, timestamp, text) VALUES (?, ?, ?, ?)";
             db.run(sqlBlock, [id, owner, timestamp, text], function (err) {
               if (err) {
-                reject("Failed to insert into blocks", err.message);
                 db.run("ROLLBACK", (rollbackErr) => {
                   if (rollbackErr) {
-                    reject(
+                    return reject(
                       "Failed to rollback transaction",
                       rollbackErr.message
                     );
                   }
                 });
+                return reject("Failed to insert into blocks", err.message);
               }
 
               db.run("COMMIT", (commitErr) => {
                 if (commitErr) {
-                  reject("Failed to commit transaction", commitErr.message);
+                  return reject("Failed to commit transaction", commitErr.message);
                 } else {
-                  resolve("Transaction committed successfully.");
+                  return resolve("Transaction committed successfully.");
                 }
               });
             });
@@ -141,10 +126,10 @@ exports.createBlock = (block) => {
     const sqlCheck = "SELECT * FROM tickets WHERE id = ?";
     db.get(sqlCheck, [ticketId], (err, row) => {
       if (err) {
-        reject(err);
+        return reject(err);
       }
       if (!row) {
-        reject("Ticket with that id does not exist");
+        return reject("Ticket with that id does not exist");
       }
     });
     const sql =
@@ -157,45 +142,6 @@ exports.createBlock = (block) => {
     });
   });
 };
-
-// exports.setTicketClosed = (ticket) => {
-//   const { id } = ticket;
-//   return new Promise((resolve, reject) => {
-//     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-//     db.run(sql, ["close", id], function (err) {
-//       if (err) {
-//         reject(err);
-//       }
-//       resolve("Ticket updated");
-//     });
-//   });
-// };
-
-// exports.setTicketOpened = (ticket) => {
-//   const { id } = ticket;
-//   return new Promise((resolve, reject) => {
-//     const sql = "UPDATE tickets SET state = ? WHERE id = ?";
-//     db.run(sql, ["open", id], function (err) {
-//       if (err) {
-//         reject(err);
-//       }
-//       resolve("Ticket updated");
-//     });
-//   });
-// };
-
-// exports.patchTicketCategory = (ticket) => {
-//   const { category, id } = ticket;
-//   return new Promise((resolve, reject) => {
-//     const sql = "UPDATE tickets SET category = ? WHERE id = ?";
-//     db.run(sql, [category, id], function (err) {
-//       if (err) {
-//         reject(err);
-//       }
-//       resolve("Category changed");
-//     });
-//   });
-// };
 
 //edit ticket
 exports.patchTicket = async (ticket) => {
