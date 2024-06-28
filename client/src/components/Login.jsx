@@ -1,41 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import API from "../API";
 import { useNavigate } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
+import LoginContext from "../context/loginContext";
 
 function LoginForm(props) {
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
-  const { setDirty } = props;
+  const [error, setError] = useState("");
+  const { setDirty, loginSuccessful, logout } = props;
+
+  const { user } = useContext(LoginContext);
 
   const navigate = useNavigate();
 
-  const handleUsernameChange = (e) => {
-    setusername(e.target.value);
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    API.login(username, password).then((user) => {
-      if (user) {
-        setDirty(true);
-        props.setErrorMessage("");
-        props.loginSuccessful(user);
-        navigate("/");
-      } else {
-        props.setErrorMessage("Wrong username or password!");
-      }
-    });
+
+    if(user){
+      //Logout logged user to avoid double session...
+      logout();
+    }
+    
+
+    API.login(username, password)
+      .then((user) => {
+        if (user) {
+          setDirty(true);
+          setError("");
+          loginSuccessful(user);
+          navigate("/");
+        } else {
+          setError("Wrong username or password!");
+        }
+      })
+      .catch((err) => {
+        setError(err.error);
+      });
   };
 
   return (
     <div>
       <center>
-        <h1 className="text-danger">{props.errorMessage}</h1>
+        <h1 className="text-danger">{error}</h1>
         <h2>Login</h2>
         <Form onSubmit={handleSubmit}>
           <Form.Group controlId="formBasicUsername">
@@ -44,7 +51,10 @@ function LoginForm(props) {
               type="text"
               placeholder="Enter username"
               value={username}
-              onChange={handleUsernameChange}
+              onChange={(e) => {
+                setusername(e.target.value);
+                setError("");
+              }}
             />
           </Form.Group>
           <p></p>
@@ -54,14 +64,16 @@ function LoginForm(props) {
               type="password"
               placeholder="Password"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError("");
+              }}
             />
           </Form.Group>
           <p></p>
           <Button variant="primary" type="submit">
             Login
           </Button>
-          
         </Form>
       </center>
     </div>

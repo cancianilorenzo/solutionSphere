@@ -9,7 +9,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import DOMPurify from "dompurify";
 import API from "../API";
 
-const { AddResponse, EditCategory} = MANAGER;
+const { AddResponse, EditCategory, ButtonCloseTicket, ButtonReopenTicket} = MANAGER;
 
 function TicketRoute(props) {
   const blocks = props.blocks;
@@ -35,6 +35,7 @@ function TicketRoute(props) {
             ticket={e}
             blocks={blocks}
             setDirty={props.setDirty}
+            setUpdateBlocks={props.setUpdateBlocks}
           />
         ))}
       </Accordion>
@@ -45,8 +46,7 @@ function TicketRoute(props) {
 //Component that contains the ticket and calls the Block component
 function Ticket(props) {
   const { user } = useContext(LoginContext);
-  const { blocks, setDirty, ticket } = props;
-  const estimations = props.estimations;
+  const { blocks, setDirty, ticket, setUpdateBlocks, estimations } = props;
 
 
   const ticketOpen = ticket.state !== "closed";
@@ -56,22 +56,6 @@ function Ticket(props) {
     user.role !== "admin" &&
     ticket.state !== "closed" &&
     user.id === ticket.owner;
-
-  function handleCloseTicket() {
-    API.patchTicket({ id: ticket.id, state: "closed" }).then((result) => {
-      if (result) {
-        setDirty(true);
-      }
-    });
-  }
-
-  function handleOpenTicket() {
-    API.patchTicket({ id: ticket.id, state: "open" }).then((result) => {
-      if (result) {
-        setDirty(true);
-      }
-    });
-  }
 
   return (
     <>
@@ -164,17 +148,13 @@ function Ticket(props) {
         {user && (
           <Accordion.Body>
             {ticketOpen && (
-              <AddResponse id={ticket.id} setDirty={props.setDirty}></AddResponse>
+              <AddResponse id={ticket.id} setDirty={props.setDirty} setUpdateBlocks={setUpdateBlocks}></AddResponse>
             )}{" "}
             {loggedAdmin && !ticketOpen && (
-              <Button variant="warning" onClick={handleOpenTicket}>
-                Reopen tickt
-              </Button>
+              <ButtonReopenTicket id={ticket.id} setDirty={setDirty}></ButtonReopenTicket>
             )}{" "}
-            {(loggedTicketOwner || loggedAdmin) && (
-              <Button variant="danger" onClick={handleCloseTicket}>
-                Close ticket
-              </Button>
+            {(loggedTicketOwner || loggedAdmin) && ticketOpen && (
+              <ButtonCloseTicket id={ticket.id} setDirty={setDirty}></ButtonCloseTicket>
             )}{" "}
             {loggedAdmin && <EditCategory id={ticket.id} setDirty={setDirty} category={ticket.category}></EditCategory>}
           </Accordion.Body>

@@ -16,7 +16,7 @@ const userDao = require("./dao-users");
 //Server 2
 const jsonwebtoken = require('jsonwebtoken');
 const jwtSecret = '201362858dd0d0e5e5c4105228dd54b8be10aba87f4992aa428c0f93aed74ebc';
-const expireTime = 60;
+const expireTime = 30;
 
 
 //Server
@@ -55,7 +55,7 @@ const session = require("express-session");
 
 app.use(
   session({
-    secret: "Mamma, anche quest'anno niente vacanze", //TODO
+    secret: "G4h9yVb2R3f8LdO6pQ0kJ7mT1uX5cWz3vBnE7aF5cK8tY2oP0sD4xG6jM1lI9U4",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -88,7 +88,7 @@ app.get("/api/tickets", (req, res) => {
   ticketDao
     .listTickets()
     .then((tickets) => res.json(tickets))
-    .catch((err) => {console.log('Sono in errore');res.status(500).json(err)
+    .catch((err) => {res.status(500).json(err)
 
     });
 });

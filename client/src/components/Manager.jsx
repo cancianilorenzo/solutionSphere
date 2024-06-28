@@ -4,18 +4,21 @@ import API from "../API";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 
+//Component to create ticket
 function CreateTicket(props) {
   const [title, setTitle] = useState(props.title || "");
   const [category, setCategory] = useState(props.category || "inquiry");
   const [text, setText] = useState(props.text || "");
   const [disabled, setDisabled] = useState(false);
   const [textButton, setTextButton] = useState("Create ticket");
-  const { error, jwt, setJwt } = props;
+  const { jwt, setJwt, setDirty, setUpdateBlocks } = props;
   const [estimation, setEstimation] = useState(undefined);
+  const [error, setError] = useState("");
 
   const restore = () => {
-    props.setErrorMessage("");
-    props.setDirty(true);
+    setError("");
+    setDirty(true);
+    setUpdateBlocks(true);
   };
 
   const navigate = useNavigate();
@@ -23,7 +26,7 @@ function CreateTicket(props) {
   const handleSubmitTicket = (e) => {
     e.preventDefault();
     if (title === "" || category === "" || text === "") {
-      props.setErrorMessage("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
     if (!disabled) {
@@ -35,15 +38,17 @@ function CreateTicket(props) {
           setEstimation(result);
         })
         .catch((err) => {
-          API.getAuthToken().then((resp) => {
-            setJwt(resp.token);
-            API.getEstimation(resp.token, [{ title, category }])
-              .then((estimations) => {
-                const result = estimations.map((obj) => obj.estimation);
-                setEstimation(result);
-              })
-              .catch((err) => console.error(err));
-          });
+          API.getAuthToken()
+            .then((resp) => {
+              setJwt(resp.token);
+              API.getEstimation(resp.token, [{ title, category }])
+                .then((estimations) => {
+                  const result = estimations.map((obj) => obj.estimation);
+                  setEstimation(result);
+                })
+                .catch((err) => setError(err));
+            })
+            .catch((err) => setError(err));
         });
     } else {
       API.createTicket({ title, category, text }).then((ticket) => {
@@ -51,7 +56,7 @@ function CreateTicket(props) {
           restore();
           navigate("/");
         } else {
-          props.setErrorMessage("Failed to create the ticket");
+          setError("Failed to create the ticket");
         }
       });
     }
@@ -64,13 +69,13 @@ function CreateTicket(props) {
   };
 
   const handleBack = () => {
-      navigate("/");
-  }
+    navigate("/");
+  };
 
   return (
     <>
       <center>
-        {error && <h1 className="text-danger">{props.errorMessage}</h1>}
+        {error && <h1 className="text-danger">{error}</h1>}
         <Form onSubmit={handleSubmitTicket}>
           <fieldset disabled={disabled}>
             {disabled && <h1>Estimation: {estimation}</h1>}
@@ -81,6 +86,7 @@ function CreateTicket(props) {
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value);
+                  setError("");
                 }}
               />
             </Form.Group>
@@ -92,6 +98,7 @@ function CreateTicket(props) {
                 value={category}
                 onChange={(e) => {
                   setCategory(e.target.value);
+                  setError("");
                 }}
               >
                 <option value="inquiry">Inquiry</option>
@@ -109,6 +116,7 @@ function CreateTicket(props) {
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
+                  setError("");
                 }}
               />
             </Form.Group>
@@ -134,10 +142,11 @@ function CreateTicket(props) {
   );
 }
 
+//Component to add response
 function AddResponse(props) {
   const [show, setShow] = useState(false);
   const [text, setText] = useState("");
-  const { id } = props;
+  const { id, setDirty, setUpdateBlocks } = props;
   const [error, setError] = useState("");
 
   const handleClose = () => {
@@ -147,14 +156,24 @@ function AddResponse(props) {
   const handleShow = () => setShow(true);
 
   function handleAddResponse() {
-    API.createBlock({ text, id }).then((block) => {
-      if (block) {
-        props.setDirty(true);
-        handleClose();
-      } else {
-        setError("Error in patching ticket");
-      }
-    });
+    if(text === ""){
+      setError("Please fill in all fields");
+      return;
+    }
+
+    API.createBlock({ text, id })
+      .then((block) => {
+        if (block) {
+          setDirty(true);
+          setUpdateBlocks(true);
+          handleClose();
+        } else {
+          setError("Error in patching ticket");
+        }
+      })
+      .catch((err) => {
+        setError(err);
+      });
   }
 
   return (
@@ -181,6 +200,7 @@ function AddResponse(props) {
                 autoFocus
                 onChange={(e) => {
                   setText(e.target.value);
+                  setError("");
                 }}
               />
             </Form.Group>
@@ -212,14 +232,18 @@ function EditCategory(props) {
   const handleShow = () => setShow(true);
 
   function handleEditCategory() {
-    API.patchTicket({ id, category }).then((ticket) => {
-      if (ticket) {
-        setDirty(true);
-        handleClose();
-      } else {
-        setError("Error in patching ticket");
-      }
-    });
+    API.patchTicket({ id, category })
+      .then((ticket) => {
+        if (ticket) {
+          setDirty(true);
+          handleClose();
+        } else {
+          setError("Error in patching ticket");
+        }
+      })
+      .catch((err) => {
+        setError(err);
+      });
   }
 
   return (
@@ -272,5 +296,54 @@ function EditCategory(props) {
   );
 }
 
-const MANAGER = { CreateTicket, AddResponse, EditCategory };
+//Button to close ticket
+function ButtonCloseTicket(props) {
+  const { id, setDirty } = props;
+  const [button, setButton] = useState("Close ticket");
+
+  function handleCloseTicket() {
+    API.patchTicket({ id: id, state: "closed" })
+      .then((result) => {
+        if (result) {
+          setDirty(true);
+        }
+      })
+      .catch((err) => {
+        setButton("Error");
+      });
+  }
+
+  return (
+    <Button variant="danger" onClick={handleCloseTicket}>
+      {button}
+    </Button>
+  );
+}
+
+
+//Button to reopen ticket
+function ButtonReopenTicket(props) {
+  const { id, setDirty } = props;
+  const [button, setButton] = useState("Reopen ticket");
+
+  function handleReopenTicket() {
+    API.patchTicket({ id: id, state: "open" })
+      .then((result) => {
+        if (result) {
+          setDirty(true);
+        }
+      })
+      .catch((err) => {
+        setButton("Error");
+      });
+  }
+
+  return (
+    <Button variant="warning" onClick={handleReopenTicket}>
+      {button}
+    </Button>
+  );
+}
+
+const MANAGER = { CreateTicket, AddResponse, EditCategory, ButtonCloseTicket, ButtonReopenTicket };
 export default MANAGER;

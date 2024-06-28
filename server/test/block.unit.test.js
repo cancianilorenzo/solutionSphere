@@ -1,6 +1,5 @@
 const ticketDao = require("../dao-tickets");
 const db = require("../db");
-const dayjs = require("dayjs");
 
 jest.mock("../db");
 
@@ -35,6 +34,8 @@ describe("listBlocks", () => {
 
     expect(result).toEqual(mockBlocks);
   });
+
+
   test("Should retrive list of blocks", async () => {
     const errorMessage = "Database error";
     db.all.mockImplementation((sql, callback) => {
