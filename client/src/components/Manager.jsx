@@ -156,7 +156,7 @@ function AddResponse(props) {
   const handleShow = () => setShow(true);
 
   function handleAddResponse() {
-    if(text === ""){
+    if (text === "") {
       setError("Please fill in all fields");
       return;
     }
@@ -174,7 +174,7 @@ function AddResponse(props) {
       .catch((err) => {
         setError(err);
       });
-      setText("");
+    setText("");
   }
 
   return (
@@ -184,7 +184,7 @@ function AddResponse(props) {
       </Button>
 
       <Modal show={show} onHide={handleClose}>
-        {error && <h1 className="text-danger">{error}</h1>}
+        <center>{error && <h1 className="text-danger">{error}</h1>}</center>
         <Modal.Header closeButton>
           <Modal.Title>New response</Modal.Title>
         </Modal.Header>
@@ -321,7 +321,6 @@ function ButtonCloseTicket(props) {
   );
 }
 
-
 //Button to reopen ticket
 function ButtonReopenTicket(props) {
   const { id, setDirty } = props;
@@ -346,5 +345,11 @@ function ButtonReopenTicket(props) {
   );
 }
 
-const MANAGER = { CreateTicket, AddResponse, EditCategory, ButtonCloseTicket, ButtonReopenTicket };
+const MANAGER = {
+  CreateTicket,
+  AddResponse,
+  EditCategory,
+  ButtonCloseTicket,
+  ButtonReopenTicket,
+};
 export default MANAGER;

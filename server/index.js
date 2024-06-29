@@ -249,7 +249,7 @@ app.delete("/api/sessions/current", (req, res) => {
 });
 
 
-app.get('/api/auth-token', isLoggedIn, (req, res) => {
+app.get('/api/token', isLoggedIn, (req, res) => {
   const role = req.user.role;
   const id = req.user.id;
 

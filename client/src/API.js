@@ -20,7 +20,6 @@ function getTickets(id) {
       return tickets;
     })
     .catch(error => {
-      console.error("Failed to fetch blocks", error);
       return [];
     });
 }
@@ -40,7 +39,6 @@ function getBlocks() {
       return blocks;
     })
     .catch(error => {
-      console.error("Failed to fetch blocks", error);
       return []; // Ritorna un array vuoto in caso di errore
     });
 }
@@ -69,7 +67,6 @@ function createTicket(ticket) {
       return ticket;
     })
     .catch((error) => {
-      console.error("Failed to create ticket", error);
       return null;
     });
 }
@@ -100,7 +97,6 @@ function createBlock(block) {
       return block;
     })
     .catch((error) => {
-      console.error("Failed to create block", error);
       return null;
     });
 }
@@ -127,7 +123,6 @@ function patchTicket(ticket) {
       return ticket;
     })
     .catch((error) => {
-      console.error("Failed to patch ticket", error);
       return null;
     });
 }
@@ -206,7 +201,7 @@ function getInfo() {
 }
 
 async function getAuthToken() {
-  const response = await fetch(SERVER_URL+'auth-token', {
+  const response = await fetch(SERVER_URL+'token', {
     credentials: 'include'
   });
   const token = await response.json();

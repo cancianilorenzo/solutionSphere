@@ -74,6 +74,7 @@ function Layout(props) {
             </div>
           </Col>
         </Row>
+        <p></p>
         <Row className="justify-content-md-center">
           <Col md={14}>
             <MyFooter appName="SolutionSphere" />
