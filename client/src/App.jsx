@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import TicketRoute from "./components/Ticket.jsx";
 import DefaultRoute from "./components/Default.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import API from "./API.jsx";
+import API from "./API.js";
 import LoginContext from "./context/loginContext.js";
 import Layout from "./components/Layout.jsx";
 import LoginForm from "./components/Login.jsx";
