@@ -1,2 +1,4 @@
-
-  
+body, html, #root {
+    background-color: #A63446 !important;
+    /* color: #ffffff !important; */
+  }

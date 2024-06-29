@@ -9,7 +9,8 @@ import { Container, Row, Col } from "react-bootstrap";
 import DOMPurify from "dompurify";
 import API from "../API";
 
-const { AddResponse, EditCategory, ButtonCloseTicket, ButtonReopenTicket} = MANAGER;
+const { AddResponse, EditCategory, ButtonCloseTicket, ButtonReopenTicket } =
+  MANAGER;
 
 function TicketRoute(props) {
   const blocks = props.blocks;
@@ -48,7 +49,6 @@ function Ticket(props) {
   const { user } = useContext(LoginContext);
   const { blocks, setDirty, ticket, setUpdateBlocks, estimations } = props;
 
-
   const ticketOpen = ticket.state !== "closed";
   const loggedAdmin = user && user.role === "admin";
   const loggedTicketOwner =
@@ -62,30 +62,21 @@ function Ticket(props) {
       <Accordion.Item eventKey={ticket.id}>
         <Accordion.Header>
           <Container>
+            <Row className="mb-3">
+              <Col
+                xs={12}
+                className="d-flex justify-content-center"
+                style={{
+                  // backgroundColor: "#E5E7E6",
+                  borderRadius: "10px",
+                  padding: "10px",
+                }}
+              >
+                <h5>{"Title: " + ticket.title}</h5>
+              </Col>
+            </Row>
+
             <Row className="justify-content-between">
-              <Col xs={12} md={2} className="d-flex justify-content-center">
-                {ticket.title}
-              </Col>
-              <Col xs={12} md={2} className="d-flex justify-content-center">
-                <Badge
-                  bg="info"
-                  style={{
-                    width: "120px",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "40px", // Imposta un'altezza per il badge
-                  }}
-                >
-                  {ticket.category}
-                </Badge>
-              </Col>
-              <Col xs={12} md={2} className="d-flex justify-content-center">
-                {ticket.owner_username}
-              </Col>
-              <Col xs={12} md={2} className="d-flex justify-content-center">
-                {ticket.timestamp}
-              </Col>
               <Col xs={12} md={1} className="d-flex justify-content-center">
                 {ticket.state === "open" ? (
                   <Badge
@@ -95,7 +86,7 @@ function Ticket(props) {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      height: "40px", // Imposta un'altezza per il badge
+                      height: "40px", // Set a height for the badge
                     }}
                   >
                     Open
@@ -108,12 +99,32 @@ function Ticket(props) {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      height: "40px", // Imposta un'altezza per il badge
+                      height: "40px", // Set a height for the badge
                     }}
                   >
                     Closed
                   </Badge>
                 )}
+              </Col>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
+                {"Author: " + ticket.owner_username}
+              </Col>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
+                <Badge
+                  bg="info"
+                  style={{
+                    width: "120px",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "40px", // Set a height for the badge
+                  }}
+                >
+                  {ticket.category}
+                </Badge>
+              </Col>
+              <Col xs={12} md={2} className="d-flex justify-content-center">
+                {ticket.timestamp}
               </Col>
               <Col xs={12} md={2} className="d-flex justify-content-center">
                 {user && user.role === "admin" && (
@@ -124,7 +135,7 @@ function Ticket(props) {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      height: "40px", // Imposta un'altezza per il badge
+                      height: "40px", // Set a height for the badge
                     }}
                   >
                     {estimations[ticket.id - 1] + " hours"}
@@ -148,15 +159,31 @@ function Ticket(props) {
         {user && (
           <Accordion.Body>
             {ticketOpen && (
-              <AddResponse id={ticket.id} setDirty={props.setDirty} setUpdateBlocks={setUpdateBlocks}></AddResponse>
+              <AddResponse
+                id={ticket.id}
+                setDirty={props.setDirty}
+                setUpdateBlocks={setUpdateBlocks}
+              ></AddResponse>
             )}{" "}
             {loggedAdmin && !ticketOpen && (
-              <ButtonReopenTicket id={ticket.id} setDirty={setDirty}></ButtonReopenTicket>
+              <ButtonReopenTicket
+                id={ticket.id}
+                setDirty={setDirty}
+              ></ButtonReopenTicket>
             )}{" "}
             {(loggedTicketOwner || loggedAdmin) && ticketOpen && (
-              <ButtonCloseTicket id={ticket.id} setDirty={setDirty}></ButtonCloseTicket>
+              <ButtonCloseTicket
+                id={ticket.id}
+                setDirty={setDirty}
+              ></ButtonCloseTicket>
             )}{" "}
-            {loggedAdmin && <EditCategory id={ticket.id} setDirty={setDirty} category={ticket.category}></EditCategory>}
+            {loggedAdmin && (
+              <EditCategory
+                id={ticket.id}
+                setDirty={setDirty}
+                category={ticket.category}
+              ></EditCategory>
+            )}
           </Accordion.Body>
         )}
       </Accordion.Item>
@@ -172,7 +199,7 @@ function Block(props) {
         style={{
           border: "1px solid black",
           padding: "10px",
-          backgroundColor: "#f8f9fa",
+          backgroundColor: "#F1F7EE",
         }}
       >
         <Row>

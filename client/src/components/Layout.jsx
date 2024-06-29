@@ -17,9 +17,19 @@ function MyFooter(props) {
 function MyNavbar(props) {
   const { user, setUser } = useContext(LoginContext);
   return (
-    <Navbar bg="secondary" expand="lg" className="w-100">
+    <Navbar
+      expand="lg"
+      className="w-100"
+      style={{ backgroundColor: "#B7B5B3" }}
+    >
       <Container fluid>
-        <Row className="w-100 justify-content-between align-items-center">
+        <Row
+          className="w-100 justify-content-between align-items-center"
+          style={{
+            borderRadius: "10px",
+            padding: "10px",
+          }}
+        >
           <Col xs={4} className="text-center">
             <Link to="/">
               <Navbar.Brand>{props.appName || "Ticketing"}</Navbar.Brand>

@@ -1,12 +1,14 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/Y8bW3OQP)
-# Exam #1234: "Exam Title"
-## Student: s123456 LASTNAME FIRSTNAME 
+# Exam #1: "Ticketing System"
+## Student: s317836 CANCIANI LORENZO
 
 ## React Client Application Routes
 
-- Route `/`: page content and purpose
-- Route `/something/:param`: page content and purpose, param specification
-- ...
+- Route `/`: Homepage, shows the list of all tickets. Logged users can also add ticket and see responses.
+- Route `/login`: Login form, allows users to login. After a successful login, the user is redirected to the main route ("/").
+- Route `/create`: Ticket creation page, allows an authenticated user to create a ticket.
+- Route `*`: Page for nonexisting URLs (Not Found page) that allow the user to move to `/login` with a click.
+
 
 ## API Server
 
