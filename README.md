@@ -62,7 +62,7 @@
     }...]
     ```
 
-  - **Codes**: `200 OK`, `500 Internal Server Error`.
+  - **Codes**: `200 OK`, `401 Unauthorized`, `500 Internal Server Error`.
 
 
 
@@ -256,13 +256,13 @@
 - `TicketRoute` (in `/components/Ticket.jsx`): is rendered in `/` route, it is a wrapper around a Bootstrap Accordion component to render tickets.
 - `Ticket` (in `/components/Ticket.jsx`): is rendered by `TicketRoute` and contains ticket title, owner, date, category and, in case of admin, also the closing time estimation. Contains also management options for tickets and blocks if teh user is logged in.
 - `Block` (in `/components/Ticket.jsx`): is rendered by `Ticket` and contains blocks content.
-- `CreateTicket` (in `/components/Manager.jsx`): is rendered after from the `Add ticket` button in `/` for the logged user ad redirect user to `/create` route. It allows to insert ticket title, category and first block of text. User can check ticket before submitting in a non-edit fashion and can decide to submit to return to edit mode, when submitting (or pre-submitting) a ticket, user get estimation closing time.
+- `CreateTicket` (in `/components/Manager.jsx`): is rendered starting from the `Add ticket` button in `/` for the logged user and redirect user to `/create` route. It allows to insert ticket title, category and first block of text. User can check ticket before submitting in a non-edit fashion and can decide to submit or return to edit mode. When submitting (or pre-submitting) a ticket, user get estimation closing time.
 - `AddResponse` (in `/components/Manager.jsx`): allows logged user, through a Bootstrap Modal, to insert new response to a ticket.
 - `EditCategory` (in `/components/Manager.jsx`): allows logged admin to change category through a Bootsrtap Modal, admin can choose from a category list and must confirm selection.
 - `ButtonCloseTicket` & `ButtonReopenTIcket` (in `/components/Manager.jsx`): handle ticket reopen and close operations, reopen is usable only by admins, close only from admin or ticket owner.
-- `MyNavbar` (in `/components/Layout.jsx`): renders custom navbar that contains login/logout button, username of logge user (if present), app name that contains a link to the `/` route.
+- `MyNavbar` (in `/components/Layout.jsx`): renders custom navbar that contains login/logout button, username of logged user (if present), app name that contains a link to the `/` route.
 - `Layout` (in `/components/Layout.jsx`): renders the basic layout present in each route, renders MyNavbar and MyFooter.
-- `LoginForm` (in `/components/LoginForm.js`): the login form that user can use to login into the app. This is responsible for the client-side validation of the login credentials (valid email and non-empty password).
+- `LoginForm` (in `/components/Login.jsx`): the login form that user can use to login into the app. This is responsible for the client-side validation of the login credentials (non-empty username and non-empty password).
 
 ## Screenshot
 ![Initial page](./img/ticketExpandAdmin.png)

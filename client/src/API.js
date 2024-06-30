@@ -36,6 +36,9 @@ function getBlocks() {
       return response.json();
     })
     .then(blocks => {
+      blocks.sort((a, b) => {
+        return new dayjs(a.timestamp) - new dayjs(b.timestamp);
+      });
       return blocks;
     })
     .catch(error => {
