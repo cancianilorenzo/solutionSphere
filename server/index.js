@@ -32,7 +32,7 @@ app.use(cors(corsOptions));
 
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }))
 
 passport.use(
   new LocalStrategy(async function verify(username, password, callback) {
