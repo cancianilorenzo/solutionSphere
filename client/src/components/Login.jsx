@@ -21,6 +21,10 @@ function LoginForm(props) {
       //Logout logged user to avoid double session...
       logout();
     }
+    if(username === "" || password === ""){
+      setError("Please fill all fields!");
+      return;
+    }
     
 
     API.login(username, password)
