@@ -270,7 +270,7 @@
 | username | password  | role   |
 |-----------|-----------|--------|
 | admin1    | password1 |  admin |
-| admin2    | password2 |  user  |
+| admin2    | password2 |  admin |
 | user3     | password3 |  user  |
 | user4     | password4 |  user  |
 | user5     | password5 |  user  |
