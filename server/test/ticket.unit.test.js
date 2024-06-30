@@ -71,7 +71,7 @@ describe("createTicket", () => {
     };
 
     await expect(ticketDao.createTicket(ticket)).resolves.toEqual(
-      "Transaction committed successfully."
+      {"id": 1}
     );
   });
 

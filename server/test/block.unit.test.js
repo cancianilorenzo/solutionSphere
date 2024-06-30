@@ -56,7 +56,7 @@ describe("createBlock", () => {
 
     //Create block
     db.run.mockImplementation((sql, params, callback) => {
-      callback(null);
+      callback.call({ lastID: 1 }, null);
     });
 
     const block = {
@@ -66,7 +66,7 @@ describe("createBlock", () => {
     };
 
     await expect(ticketDao.createBlock(block)).resolves.toEqual(
-      "Ticket block created successfully"
+      { id: 1 }
     );
 
   });
