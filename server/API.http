@@ -11,15 +11,12 @@ GET http://localhost:3001/api/blocks?id=ciao HTTP/1.1
 
 
 ## Create new ticket
-PATCH http://localhost:3001/api/ticket HTTP/1.1
+PATCH http://localhost:3001/api/tickets/4 HTTP/1.1
 content-type: application/json
 
 {
-    "title": "Ticket from HTTP request",
-    "text": "This is a ticket",
-    "state": "closed",
-    "owner": 3,
-    "id": 1
+    "state": "open",
+    "category": "new feature"
 }
 ###
 
@@ -28,9 +25,9 @@ POST http://localhost:3001/api/blocks HTTP/1.1
 content-type: application/json
 
 {
-    "text": "This is a ticket00",
-    "ticketId": 5,
-    "author": 5
+    "text": "This is a block00",
+    "ticketId": 5
+    # "author": 5
 }
 ###
 
@@ -65,5 +62,5 @@ content-type: application/json
 
 
 ## Get token
-GET http://localhost:3001/api/auth-token HTTP/1.1
+GET http://localhost:3001/api/token HTTP/1.1
 ###

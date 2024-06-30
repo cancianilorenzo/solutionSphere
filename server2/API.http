@@ -1,7 +1,7 @@
 ## Create new block 
-POST http://localhost:3002/estimation HTTP/1.1
+POST http://localhost:3002/estimations HTTP/1.1
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpZCI6MSwiaWF0IjoxNzE5MDkzMDIwLCJleHAiOjE3NTUwOTMwMjB9.bbWH1NJ-swhytzGmycmZ3VMWL04HQIXqFdSdpnIgEl4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpZCI6MSwiaWF0IjoxNzE5NzM1ODQxLCJleHAiOjE3MTk3MzU4NzF9.mUyvGva-zXgyZcdZ1b5aGaux7ZeDiDOtfiZBSKZwQoE
 
 {
     "tickets": [

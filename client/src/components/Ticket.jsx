@@ -138,7 +138,7 @@ function Ticket(props) {
                       height: "40px", // Set a height for the badge
                     }}
                   >
-                    {estimations[ticket.id - 1] + " hours"}
+                    {estimations[ticket.id - 1]}
                   </Badge>
                 )}
               </Col>

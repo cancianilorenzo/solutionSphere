@@ -106,7 +106,7 @@ exports.createTicket = (ticket) => {
                 if (commitErr) {
                   return reject("Failed to commit transaction", commitErr.message);
                 } else {
-                  return resolve("Transaction committed successfully.");
+                  return resolve({ id: ticket.id});
                 }
               });
             });
@@ -138,7 +138,7 @@ exports.createBlock = (block) => {
       if (err) {
         reject(err);
       }
-      resolve("Ticket block created successfully");
+      resolve({ id: this.lastID });
     });
   });
 };
@@ -151,7 +151,7 @@ exports.patchTicket = async (ticket) => {
       if (err) {
         reject(err);
       }
-      resolve("Ticket updated");
+      resolve(ticket);
     });
   });
 };

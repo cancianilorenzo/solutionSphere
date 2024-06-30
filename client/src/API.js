@@ -20,7 +20,7 @@ function getTickets(id) {
       return tickets;
     })
     .catch(error => {
-      return [];
+      throw error;
     });
 }
 
@@ -39,7 +39,7 @@ function getBlocks() {
       return blocks;
     })
     .catch(error => {
-      return []; // Ritorna un array vuoto in caso di errore
+      throw error
     });
 }
 
@@ -67,7 +67,7 @@ function createTicket(ticket) {
       return ticket;
     })
     .catch((error) => {
-      return null;
+      throw error;
     });
 }
 
@@ -97,12 +97,12 @@ function createBlock(block) {
       return block;
     })
     .catch((error) => {
-      return null;
+      throw error;
     });
 }
 
 function patchTicket(ticket) {
-  return fetch(SERVER_URL + "ticket/" + ticket.id, {
+  return fetch(SERVER_URL + "tickets/" + ticket.id, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -123,7 +123,7 @@ function patchTicket(ticket) {
       return ticket;
     })
     .catch((error) => {
-      return null;
+      throw error;
     });
 }
 
@@ -149,8 +149,7 @@ function login(username, password) {
       return user;
     })
     .catch((error) => {
-      console.error("Failed to log in", error);
-      return null;
+      throw error
     });
 }
 
@@ -173,8 +172,7 @@ function logout() {
       return null;
     })
     .catch((error) => {
-      console.error("Failed to log out", error);
-      return null;
+      throw error;
     });
 }
 
@@ -196,38 +194,47 @@ function getInfo() {
       return user;
     })
     .catch((error) => {
-      return null;
+      throw  error;
     });
 }
 
-async function getAuthToken() {
-  const response = await fetch(SERVER_URL+'token', {
+
+function getAuthToken() {
+  return fetch(SERVER_URL + 'token', {
     credentials: 'include'
+  })
+  .then(response => response.json().then(token => {
+    if (response.ok) {
+      return token;
+    } else {
+      throw token;
+    }
+  }))
+  .catch(error => {
+    throw error;
   });
-  const token = await response.json();
-  if (response.ok) {
-    return token;
-  } else {
-    throw token;
-  }
 }
 
-async function getEstimation(authToken, tickets) {
-  // retrieve info from an external server, where info can be accessible only via JWT token
-  const response = await fetch(SERVER_SUPPORT+`estimation`, {
+
+function getEstimation(authToken, tickets) {
+  return fetch(SERVER_SUPPORT + 'estimations', {
     method: 'POST',
-    headers: { 
+    headers: {
       'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({tickets: tickets }),
+    body: JSON.stringify({ tickets: tickets }),
+  })
+  .then(response => response.json().then(info => {
+    if (response.ok) {
+      return info;
+    } else {
+      throw info;
+    }
+  }))
+  .catch(error => {
+    throw error;
   });
-  const info = await response.json();
-  if (response.ok) {
-    return info;
-  } else {
-    throw info;  // expected to be a json object (coming from the server) with info about the error
-  }
 }
 
 

@@ -87,7 +87,7 @@ const validStates = ["open", "closed"];
 app.get("/api/tickets", (req, res) => {
   ticketDao
     .listTickets()
-    .then((tickets) => res.json(tickets))
+    .then((tickets) => res.status(200).json(tickets))
     .catch((err) => {res.status(500).json(err)
 
     });
@@ -178,7 +178,7 @@ app.post(
 );
 
 app.patch(
-  "/api/ticket/:id",
+  "/api/tickets/:id",
   [ param("id").isInt().withMessage("Id should be an integer"),
     body("category")
       .optional()

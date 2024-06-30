@@ -30,7 +30,6 @@ app.use(jwt({
 
 
 app.use( function (err, req, res, next) {
-  // console.log("DEBUG: error handling function executed");
   if (err.name === 'UnauthorizedError') {
     res.status(401).json("Invalid token");
   } else {
@@ -39,21 +38,25 @@ app.use( function (err, req, res, next) {
 } );
 
 
-app.post("/estimation", (req, res) => {
+app.post("/estimations", (req, res) => {
   const authJwt = req.auth;
+  let estimation;
   if(!authJwt){
     res.status(401).json("Invalid token");
   }
   try {  const { tickets } = req.body;
   const ticketValue = tickets.map(ticket => {
     if(!ticket.title || !ticket.category){
-      return { estimation: 0 };
+      estimation = 0;
+      return { estimation };
     }
+    estimation = (((ticket.title.replace(/\s/g, '').length + ticket.category.replace(/\s/g, '').length)) * 10) +(Math.floor(Math.random() * 240) + 1);
+
     if(req.auth.role !== 'admin'){
-      return { estimation: Math.round(((((ticket.title.replace(/\s/g, '').length + ticket.category.replace(/\s/g, '').length)) * 10) +(Math.floor(Math.random() * 240) + 1))/24) }
+      return { estimation: Math.round(estimation/24)  + 'day(s)' }
     }
     if(req.auth.role === 'admin'){
-      return { estimation: (((ticket.title.replace(/\s/g, '').length + ticket.category.replace(/\s/g, '').length)) * 10) +(Math.floor(Math.random() * 240) + 1)}
+      return { estimation: Math.round(estimation/24) + 'day(s)' + estimation%24 + 'hour(s)'}
     }
     
   });
